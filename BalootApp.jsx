@@ -179,8 +179,10 @@ function computeStats(matches) {
   return stats;
 }
 
+const MIN_RANKED_FOR_TITLE = 5;
+
 function computeTitles(stats) {
-  const names = Object.keys(stats);
+  const names = Object.keys(stats).filter((n) => stats[n].ranked >= MIN_RANKED_FOR_TITLE);
   function topBy(field, criteriaLabel) {
     let best = null, bestVal = -1;
     for (const name of names) {
@@ -631,12 +633,12 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <div className="panel" style={{ flex: 1, textAlign: "center", background: "#0D6E5E", color: "#FBF6EC", margin: 0 }}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>{teamA.join(" و ")}</div>
+          <div style={{ fontSize: 12, opacity: 0.8 }}>{teamA.join(" / ")}</div>
           <div style={{ fontSize: 30, fontWeight: 800 }}>{cumA}</div>
           <div className="progress-track" style={{ marginTop: 6 }}><div className="progress-fill" style={{ width: `${pctA}%`, background: "#C9971F" }} /></div>
         </div>
         <div className="panel" style={{ flex: 1, textAlign: "center", background: "#8B1538", color: "#FBF6EC", margin: 0 }}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>{teamB.join(" و ")}</div>
+          <div style={{ fontSize: 12, opacity: 0.8 }}>{teamB.join(" / ")}</div>
           <div style={{ fontSize: 30, fontWeight: 800 }}>{cumB}</div>
           <div className="progress-track" style={{ marginTop: 6 }}><div className="progress-fill" style={{ width: `${pctB}%`, background: "#C9971F" }} /></div>
         </div>
@@ -644,23 +646,25 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
       {winner ? (
         <div className="panel" style={{ textAlign: "center", background: "#C9971F", fontWeight: 800 }}>
-          🏆 {(winner === "A" ? teamA : teamB).join(" و ")} فازوا بالقيم!
-          <div style={{ marginTop: 10 }}><button className="pill pill-active" style={{ background: "#0F172A" }} onClick={onNewMatch}>ابدأ قيم جديد</button></div>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: 1 }}>
+            🏆 الناموووس {(winner === "A" ? teamA : teamB).join(" / ")} !
+          </div>
+          <div style={{ marginTop: 10 }}><button className="pill pill-active" style={{ background: "#0F172A" }} onClick={onNewMatch}>قيم ثاني؟</button></div>
         </div>
       ) : (
         <div className="panel">
           <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
             <div style={{ flex: 1 }}>
-              <label>{teamA.join("+")}</label>
+              <label>{teamA.join(" / ")}</label>
               <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} />
             </div>
             <div style={{ flex: 1 }}>
-              <label>{teamB.join("+")}</label>
+              <label>{teamB.join(" / ")}</label>
               <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} />
             </div>
           </div>
 
-          <label>قيد؟ (مين تسبب فيه - اختياري)</label>
+          <label>قيد</label>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
             <button className={`pill ${!qaidPlayer ? "pill-active" : "pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
             {allPlayers.map((p) => (<button key={p} className={`pill ${qaidPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>))}
@@ -683,7 +687,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
           {!qaidPlayer && showKaboot && (
             <div style={{ marginBottom: 12 }}>
-              <label>كبوت؟ (مين جاب الكبوت)</label>
+              <label>كبوت</label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button className={`pill ${kabootPlayer === null ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer(null)}>لا</button>
                 {allPlayers.map((p) => (<button key={p} className={`pill ${kabootPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer(p)}>{p}</button>))}
@@ -693,7 +697,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
           {!qaidPlayer && !kabootPlayer && showBuyer && (
             <div style={{ marginBottom: 12 }}>
-              <label>من اشترى؟ (للإحصائيات بس)</label>
+              <label>من اشترى</label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button className={`pill ${!buyerPlayer ? "pill-active" : "pill-inactive"}`} onClick={() => setBuyerPlayer("")}>بدون</button>
                 {allPlayers.map((p) => (<button key={p} className={`pill ${buyerPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setBuyerPlayer(p)}>{p}</button>))}
@@ -703,11 +707,11 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
           {!qaidPlayer && showProjects && (
             <div style={{ marginBottom: 8 }}>
-              <label>مشاريع نازلة؟ (للإحصائيات بس)</label>
+              <label>مشاريع</label>
               <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                 <button className={`pill ${projectTeam === "none" ? "pill-active" : "pill-inactive"}`} onClick={() => { setProjectTeam("none"); setProjectAssign({}); }}>بدون</button>
-                <button className={`pill ${projectTeam === "A" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("A")}>لـ{teamA.join("+")}</button>
-                <button className={`pill ${projectTeam === "B" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("B")}>لـ{teamB.join("+")}</button>
+                <button className={`pill ${projectTeam === "A" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("A")}>لـ{teamA.join(" / ")}</button>
+                <button className={`pill ${projectTeam === "B" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("B")}>لـ{teamB.join(" / ")}</button>
               </div>
 
               {projectTeam !== "none" && (
@@ -739,7 +743,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           )}
 
           {error && <div style={{ color: "#8B1538", fontSize: 13, marginBottom: 8 }}>⚠ {error}</div>}
-          <button onClick={addRound} style={{ width: "100%", background: "#C9971F", border: "none", borderRadius: 10, padding: 12, fontWeight: 800 }}>أضف الكوت</button>
+          <button onClick={addRound} style={{ width: "100%", background: "#C9971F", border: "none", borderRadius: 10, padding: 12, fontWeight: 800 }}>تم</button>
         </div>
       )}
 
@@ -904,10 +908,10 @@ function LogScreen({ matches, onDelete }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: 12, opacity: 0.6 }}>{fullDateTime(m.date)}</div>
-              <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>{m.teamA.join(" و ")} <span style={{ opacity: 0.5 }}>ضد</span> {m.teamB.join(" و ")}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>{m.teamA.join(" / ")} <span style={{ opacity: 0.5 }}>ضد</span> {m.teamB.join(" / ")}</div>
               <div style={{ fontSize: 13, marginTop: 2 }}>
                 النتيجة: {m.finalA} - {m.finalB} ·{" "}
-                <span style={{ fontWeight: 700, color: "#0D6E5E" }}>فاز {(m.winningTeam === "A" ? m.teamA : m.teamB).join(" و ")}</span>{"  "}
+                <span style={{ fontWeight: 700, color: "#0D6E5E" }}>فاز {(m.winningTeam === "A" ? m.teamA : m.teamB).join(" / ")}</span>{"  "}
                 <span className="badge" style={{ background: m.mode === "ranked" ? "#C9971F" : "#888" }}>{m.mode === "ranked" ? "Ranked" : "بسيط"}</span>
               </div>
             </div>
