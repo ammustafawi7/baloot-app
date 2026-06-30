@@ -552,7 +552,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     if (isNaN(a) || isNaN(b)) { setError("أدخل رقمين صحيحين"); return null; }
 
     return {
-      label: kabootPlayer ? `كبوت (${kabootPlayer})` : buyerPlayer ? `${game === "sun" ? "صن" : "حكم"}-${buyerPlayer}` : "كوت",
+      label: kabootPlayer ? `كبوت (${kabootPlayer === "A" ? teamA.join(" / ") : teamB.join(" / ")})` : buyerPlayer ? `${game === "sun" ? "صن" : "حكم"}-${buyerPlayer}` : "كوت",
       A: a, B: b,
       buyerPlayer: buyerPlayer || null,
       game: buyerPlayer ? game : null,
@@ -664,7 +664,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             </div>
           </div>
 
-          <label>قيد</label>
+          <label style={{ fontWeight: 800 }}>قيد</label>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
             <button className={`pill ${!qaidPlayer ? "pill-active" : "pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
             {allPlayers.map((p) => (<button key={p} className={`pill ${qaidPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>))}
@@ -679,25 +679,26 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
           {!qaidPlayer && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-              <button className={`pill ${showKaboot ? "pill-active" : "pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {kabootPlayer ? `(${kabootPlayer})` : ""} {showKaboot ? "▲" : "▼"}</button>
-              <button className={`pill ${showBuyer ? "pill-active" : "pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>من اشترى {buyerPlayer ? `(${buyerPlayer})` : ""} {showBuyer ? "▲" : "▼"}</button>
-              <button className={`pill ${showProjects ? "pill-active" : "pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {projectTeam !== "none" ? `(${projectTeam})` : ""} {showProjects ? "▲" : "▼"}</button>
+              <button className={`pill ${showKaboot ? "pill-active" : "pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {kabootPlayer ? `(${kabootPlayer === "A" ? teamA.join(" / ") : teamB.join(" / ")})` : ""} {showKaboot ? "▲" : "▼"}</button>
+              <button className={`pill ${showBuyer ? "pill-active" : "pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {buyerPlayer ? `(${buyerPlayer})` : ""} {showBuyer ? "▲" : "▼"}</button>
+              <button className={`pill ${showProjects ? "pill-active" : "pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects ? "▲" : "▼"}</button>
             </div>
           )}
 
           {!qaidPlayer && showKaboot && (
             <div style={{ marginBottom: 12 }}>
-              <label>كبوت</label>
+              <label style={{ fontWeight: 800 }}>كبوت</label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button className={`pill ${kabootPlayer === null ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer(null)}>لا</button>
-                {allPlayers.map((p) => (<button key={p} className={`pill ${kabootPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer(p)}>{p}</button>))}
+                <button className={`pill ${kabootPlayer === "A" ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer("A")}>{teamA.join(" / ")}</button>
+                <button className={`pill ${kabootPlayer === "B" ? "pill-active" : "pill-inactive"}`} onClick={() => setKabootPlayer("B")}>{teamB.join(" / ")}</button>
               </div>
             </div>
           )}
 
-          {!qaidPlayer && !kabootPlayer && showBuyer && (
+          {!qaidPlayer && showBuyer && (
             <div style={{ marginBottom: 12 }}>
-              <label>من اشترى</label>
+              <label style={{ fontWeight: 800 }}>الشراي</label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button className={`pill ${!buyerPlayer ? "pill-active" : "pill-inactive"}`} onClick={() => setBuyerPlayer("")}>بدون</button>
                 {allPlayers.map((p) => (<button key={p} className={`pill ${buyerPlayer === p ? "pill-active" : "pill-inactive"}`} onClick={() => setBuyerPlayer(p)}>{p}</button>))}
@@ -707,11 +708,11 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
           {!qaidPlayer && showProjects && (
             <div style={{ marginBottom: 8 }}>
-              <label>مشاريع</label>
+              <label style={{ fontWeight: 800 }}>مشاريع</label>
               <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                 <button className={`pill ${projectTeam === "none" ? "pill-active" : "pill-inactive"}`} onClick={() => { setProjectTeam("none"); setProjectAssign({}); }}>بدون</button>
-                <button className={`pill ${projectTeam === "A" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("A")}>لـ{teamA.join(" / ")}</button>
-                <button className={`pill ${projectTeam === "B" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("B")}>لـ{teamB.join(" / ")}</button>
+                <button className={`pill ${projectTeam === "A" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("A")}>{teamA.join(" / ")}</button>
+                <button className={`pill ${projectTeam === "B" ? "pill-active" : "pill-inactive"}`} onClick={() => setProjectTeam("B")}>{teamB.join(" / ")}</button>
               </div>
 
               {projectTeam !== "none" && (
