@@ -523,7 +523,7 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
       {/* Titles sliding chips */}
       {titleEntries.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div className="section-head">👑 ألقاب الشهر</div>
+          <div className="section-head">🏆 ألقاب الشهر</div>
           <div className="chips-row">
             {titleEntries.map(([key, info]) => (
               <span key={key} style={{ position: "relative" }}>
