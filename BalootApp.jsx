@@ -824,10 +824,10 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           {!qaidPlayer && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
               <button className={`pill ${showKaboot   ? "pill-active" : "pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>
-                كبوت {kabootTeam ? `(${kabootTeam === "A" ? teamA.join(" / ") : teamB.join(" / ")})` : ""} {showKaboot ? "▲" : "▼"}
+                كبوت {showKaboot ? "▲" : "▼"}
               </button>
               <button className={`pill ${showBuyer    ? "pill-active" : "pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>
-                الشراي {buyerPlayer ? `(${buyerPlayer})` : ""} {showBuyer ? "▲" : "▼"}
+                الشراي {showBuyer ? "▲" : "▼"}
               </button>
               <button className={`pill ${showProjects ? "pill-active" : "pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>
                 مشاريع {showProjects ? "▲" : "▼"}
