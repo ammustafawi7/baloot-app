@@ -264,7 +264,7 @@ function GlobalStyle() {
       .nav-center-btn.active { background: #3a3830; }
 
       /* Title chips */
-      .chips-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+      .chips-row { display: flex; gap: 8px; overflow-x: auto; overflow-y: visible; padding: 4px 16px; scrollbar-width: none; }
       .chips-row::-webkit-scrollbar { display: none; }
       .title-chip {
         flex-shrink: 0;
