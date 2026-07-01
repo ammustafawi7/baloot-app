@@ -560,10 +560,10 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
           <button className={`pill ${matchMode === "casual" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("casual")}>بسيط</button>
         </div>
 
-        <div style={{ display: "flex", gap: 0, marginBottom: 18, alignItems: "stretch", position: "relative" }}>
-          {/* فريق A */}
-          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #0E6F5C", borderRadius: "14px 0 0 14px", padding: "12px 10px" }}>
-            <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#0E6F5C", marginBottom: 10, textAlign: "center" }}>فريق A</div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 18, alignItems: "stretch", position: "relative" }}>
+          {/* فريق أ */}
+          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #0E6F5C", borderRadius: 14, padding: "12px 10px" }}>
+            <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#0E6F5C", marginBottom: 10, textAlign: "center" }}>فريق أ</div>
             <div style={{ marginBottom: 8 }}>
               <label>لاعب ١</label>
               <input type="text" value={names.A1} onChange={(e) => update("A1", e.target.value)} style={{ background: "#fff", borderRadius: 11, border: "1px solid #EBE7DE" }} />
@@ -579,9 +579,9 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
             VS
           </div>
 
-          {/* فريق B */}
-          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #9C3848", borderRadius: "0 14px 14px 0", padding: "12px 10px" }}>
-            <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#9C3848", marginBottom: 10, textAlign: "center" }}>فريق B</div>
+          {/* فريق ب */}
+          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #9C3848", borderRadius: 14, padding: "12px 10px" }}>
+            <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#9C3848", marginBottom: 10, textAlign: "center" }}>فريق ب</div>
             <div style={{ marginBottom: 8 }}>
               <label>لاعب ١</label>
               <input type="text" value={names.B1} onChange={(e) => update("B1", e.target.value)} style={{ background: "#fff", borderRadius: 11, border: "1px solid #EBE7DE" }} />
@@ -874,7 +874,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
                   <div style={{ display: "grid", gridTemplateColumns: `80px ${PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly)).map(() => "1fr").join(" ")}`, gap: 4, marginBottom: 8 }}>
                     <span />
                     {PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly)).map((p) => (
-                      <span key={p.key} style={{ fontSize: 11, textAlign: "center", fontWeight: 700, fontFamily: "'Cairo', sans-serif" }}>{p.label}</span>
+                      <span key={p.key} style={{ fontSize: 10, textAlign: "center", fontWeight: 700, fontFamily: "'Cairo', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.label}</span>
                     ))}
                   </div>
                   {projTeamPlayers.map((pl) => (
