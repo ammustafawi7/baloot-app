@@ -45,7 +45,7 @@ const PROJECTS = [
 
 const TITLES = {
   mohannak: "محنك",
-  shuja:    "شجاع",
+  shuja:    "ريّال",
   ghashash: "هطف",
   mahzoo:   "حظ هنود",
   khawwaf:  "مزهرية",
@@ -383,8 +383,8 @@ export default function BalootApp() {
         <div>
           <div className="card">
             <div style={{ display:"flex", gap:8 }}>
-              <button className="pill pill-inactive" onClick={() => setMatchMode("ranked")}>Ranked</button>
-              <button className="pill pill-active"   onClick={() => setMatchMode("casual")}>بسيط</button>
+              <button className="pill pill-inactive" onClick={() => setMatchMode("ranked")}>رسمي</button>
+              <button className="pill pill-active"   onClick={() => setMatchMode("casual")}>ودي</button>
             </div>
           </div>
           <CasualScreen casual={casual} setCasual={setCasual} />
@@ -420,6 +420,7 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
   const ready = names.A1 && names.A2 && names.B1 && names.B2;
   const titleEntries = Object.entries(titles).filter(([, v]) => v);
   const [tipKey, setTipKey] = useState(null);
+  const activeTip = tipKey ? titles[tipKey] : null;
 
   return (
     <div>
@@ -428,18 +429,16 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
           <div className="section-head">🏆 ألقاب الشهر</div>
           <div className="chips-row">
             {titleEntries.map(([key, info]) => (
-              <span key={key} style={{ position:"relative" }}>
-                <button className="title-chip" onClick={() => setTipKey(tipKey === key ? null : key)}>
-                  {info.name}: {TITLES[key]}
-                </button>
-                {tipKey === key && (
-                  <span style={{ position:"absolute", top:"110%", right:0, background:C.ink, color:"#FFFDF7", padding:"6px 12px", borderRadius:10, fontSize:12, whiteSpace:"nowrap", zIndex:20, boxShadow:"0 4px 14px rgba(0,0,0,0.18)", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}>
-                    {info.value} {info.criteriaLabel}
-                  </span>
-                )}
-              </span>
+              <button key={key} className="title-chip" style={{ outline: tipKey===key ? `2px solid ${C.gold}` : "none" }} onClick={() => setTipKey(tipKey === key ? null : key)}>
+                {info.name}: {TITLES[key]}
+              </button>
             ))}
           </div>
+          {activeTip && (
+            <div style={{ marginTop:10, background:C.goldSoft, border:`1px solid ${C.gold}44`, borderRadius:12, padding:"10px 14px", fontSize:13, color:"#7A5500", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}>
+              <span style={{ fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{activeTip.name}</span> حاز لقب <span style={{ fontWeight:700 }}>{TITLES[tipKey]}</span> بسبب {activeTip.value} {activeTip.criteriaLabel}
+            </div>
+          )}
         </div>
       )}
 
@@ -447,8 +446,8 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
         <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, marginBottom:12, color:C.ink }}>إعداد قيم</div>
 
         <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-          <button className={`pill ${matchMode === "ranked" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("ranked")}>Ranked</button>
-          <button className={`pill ${matchMode === "casual" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("casual")}>بسيط</button>
+          <button className={`pill ${matchMode === "ranked" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("ranked")}>رسمي</button>
+          <button className={`pill ${matchMode === "casual" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("casual")}>ودي</button>
         </div>
 
         <div style={{ display:"flex", gap:10, marginBottom:18, position:"relative" }}>
@@ -620,7 +619,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     <div>
       {/* Top bar */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span className="badge" style={{ background: mode === "ranked" ? C.gold : C.inkSoft }}>{mode === "ranked" ? "Ranked" : "بسيط"}</span>
+        <span className="badge" style={{ background: mode === "ranked" ? C.gold : C.inkSoft }}>{mode === "ranked" ? "رسمي" : "ودي"}</span>
         <div style={{ display:"flex", gap:6 }}>
           <button className="pill pill-inactive" style={{ fontSize:12 }} onClick={() => setShowSwap(!showSwap)}>تبديل لاعب</button>
           <button className="pill pill-red"      style={{ fontSize:12 }} onClick={onCancel}>إلغاء</button>
@@ -852,7 +851,7 @@ function StatsScreen({ stats }) {
   const [expanded, setExpanded] = useState(null);
 
   if (!players.length)
-    return <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيمات Ranked بعد.</div>;
+    return <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيمات رسمية بعد.</div>;
 
   return (
     <div className="card">
@@ -941,7 +940,7 @@ function LogScreen({ matches, onDelete }) {
               <div style={{ fontSize:13, marginTop:4, display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
                 <span style={{ color:C.inkSoft }}>{m.finalA} – {m.finalB}</span>
                 <span style={{ color:C.a, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>فاز {(m.winningTeam==="A"?m.teamA:m.teamB).join(" / ")}</span>
-                <span className="badge" style={{ background:m.mode==="ranked"?C.gold:C.inkSoft }}>{m.mode==="ranked"?"Ranked":"بسيط"}</span>
+                <span className="badge" style={{ background:m.mode==="ranked"?C.gold:C.inkSoft }}>{m.mode==="ranked"?"رسمي":"ودي"}</span>
               </div>
             </div>
             <button onClick={() => { setPwTarget(m.date); setPwInput(""); setPwError(""); }}
@@ -988,7 +987,7 @@ function ArchiveScreen({ matches, currentMonthKey }) {
             {monthLabel(selected)} {selected===currentMonthKey && <span style={{ fontSize:12, color:C.inkSoft, fontWeight:400 }}>(الحالي)</span>}
           </div>
           <div style={{ fontSize:13, color:C.inkSoft, marginBottom:titleEntries.length?12:0 }}>
-            Ranked: {monthMatches.filter((m) => m.mode==="ranked").length} · بسيط: {monthMatches.filter((m) => m.mode==="casual").length}
+            رسمي: {monthMatches.filter((m) => m.mode==="ranked").length} · ودي: {monthMatches.filter((m) => m.mode==="casual").length}
           </div>
           {titleEntries.length>0 && (
             <div className="chips-row" style={{ marginTop:8 }}>
