@@ -562,7 +562,7 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
 
         <div style={{ display: "flex", gap: 0, marginBottom: 18, alignItems: "stretch", position: "relative" }}>
           {/* فريق A */}
-          <div style={{ flex: 1, background: "#E7F2EE", border: "1px solid rgba(14,111,92,0.18)", borderRadius: "14px 0 0 14px", padding: "12px 10px" }}>
+          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #0E6F5C", borderRadius: "14px 0 0 14px", padding: "12px 10px" }}>
             <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#0E6F5C", marginBottom: 10, textAlign: "center" }}>فريق A</div>
             <div style={{ marginBottom: 8 }}>
               <label>لاعب ١</label>
@@ -580,7 +580,7 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
           </div>
 
           {/* فريق B */}
-          <div style={{ flex: 1, background: "#F6E9EA", border: "1px solid rgba(156,56,72,0.18)", borderRadius: "0 14px 14px 0", padding: "12px 10px" }}>
+          <div style={{ flex: 1, background: "#FFFFFF", border: "1px solid #EBE7DE", borderTop: "3px solid #9C3848", borderRadius: "0 14px 14px 0", padding: "12px 10px" }}>
             <div style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 800, fontSize: 13, color: "#9C3848", marginBottom: 10, textAlign: "center" }}>فريق B</div>
             <div style={{ marginBottom: 8 }}>
               <label>لاعب ١</label>
