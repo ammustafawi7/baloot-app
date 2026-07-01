@@ -486,8 +486,6 @@ export default function BalootApp() {
           matchMode={matchMode} setMatchMode={setMatchMode}
           onStart={startMatch}
           titles={titles}
-          totalMatches={matches.length}
-          monthMatches={currentMonthMatches.length}
         />
       );
     }
@@ -514,7 +512,7 @@ export default function BalootApp() {
 // =====================================================================
 // Home Screen
 // =====================================================================
-function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles, totalMatches, monthMatches }) {
+function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles }) {
   function update(field, val) { setNames({ ...names, [field]: val }); }
   const ready = names.A1 && names.A2 && names.B1 && names.B2;
   const titleEntries = Object.entries(titles).filter(([, v]) => v);
@@ -522,18 +520,6 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles,
 
   return (
     <div>
-      {/* Stat Row */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        <div className="stat-box">
-          <div className="stat-num">{monthMatches}</div>
-          <div className="stat-label">قيمات هذا الشهر</div>
-        </div>
-        <div className="stat-box">
-          <div className="stat-num">{totalMatches}</div>
-          <div className="stat-label">إجمالي القيمات</div>
-        </div>
-      </div>
-
       {/* Titles sliding chips */}
       {titleEntries.length > 0 && (
         <div style={{ marginBottom: 16 }}>
@@ -980,7 +966,7 @@ function CasualScreen({ casual, setCasual }) {
             <div style={{ flex: 1 }}><label>نحن</label><input type="text" inputMode="numeric" value={inputUs}   onChange={(e) => setInputUs(e.target.value)}   /></div>
             <div style={{ flex: 1 }}><label>هم</label> <input type="text" inputMode="numeric" value={inputThem} onChange={(e) => setInputThem(e.target.value)} /></div>
           </div>
-          <button onClick={addEntry} style={{ width: "100%", background: "#0E6F5C", border: "none", borderRadius: 12, padding: "13px 0", fontWeight: 800, color: "#fff", fontFamily: "'Cairo', sans-serif", marginBottom: 10 }}>أضف</button>
+          <button onClick={addEntry} style={{ width: "100%", background: "#0E6F5C", border: "none", borderRadius: 12, padding: "13px 0", fontWeight: 800, color: "#fff", fontFamily: "'Cairo', sans-serif", marginBottom: 10 }}>تم</button>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={undoLast} disabled={history.length === 0} className="pill pill-red"      style={{ flex: 1, opacity: history.length === 0 ? 0.4 : 1 }}>تراجع</button>
             <button onClick={newMatch}                                  className="pill pill-inactive" style={{ flex: 1 }}>قيم جديد</button>
