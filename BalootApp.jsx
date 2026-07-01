@@ -721,17 +721,17 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
                 <div style={{ background:C.bg, borderRadius:10, border:`1px solid ${C.line}`, overflow:"hidden" }}>
                   {/* Scrollable grid */}
                   <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
-                    <div style={{ minWidth: filteredProjects.length * 60 + 90, padding:"10px 12px" }}>
+                    <div style={{ minWidth: filteredProjects.length * 80 + 90, padding:"10px 12px" }}>
                       {/* Header row */}
-                      <div style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "60px").join(" ")}`, gap:4, marginBottom:8 }}>
+                      <div style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, marginBottom:8 }}>
                         <span />
                         {filteredProjects.map((p) => (
-                          <span key={p.key} style={{ fontSize:11, textAlign:"center", fontWeight:700, fontFamily:"'Cairo',sans-serif", color:C.inkSoft }}>{p.label}</span>
+                          <span key={p.key} style={{ fontSize:12, textAlign:"center", fontWeight:700, fontFamily:"'Cairo',sans-serif", color:C.inkSoft }}>{p.label}</span>
                         ))}
                       </div>
                       {/* Player rows */}
                       {projTeamPlayers.map((pl) => (
-                        <div key={pl} style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "60px").join(" ")}`, gap:4, alignItems:"center", marginBottom:6 }}>
+                        <div key={pl} style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, alignItems:"center", marginBottom:6 }}>
                           <span style={{ fontSize:13, fontFamily:"'Cairo',sans-serif", fontWeight:600, color:C.ink }}>{pl}</span>
                           {filteredProjects.map((p) => {
                             const count = (projectAssign[p.key]?.[pl]) || 0;
