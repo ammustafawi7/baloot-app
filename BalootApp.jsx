@@ -391,12 +391,13 @@ export default function BalootApp() {
           <CasualScreen casual={casual} setCasual={setCasual} />
         </div>
       );
-      return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} />;
+      const allPlayerNames = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]))).filter(Boolean);
+      return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
     }
     if (view === "play") return activeMatch
       ? <PlayScreen match={activeMatch} setMatch={setActiveMatch} onFinish={finishMatch} onCancel={cancelMatch} onUndoFinish={removeLastSavedMatch} onNewMatch={() => { setActiveMatch(null); setView("setup"); }} />
       : <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيم جاري — ابدأ قيم جديد من اللعب</div>;
-    if (view === "stats")   return <StatsScreen stats={allTimeStats} />;
+    if (view === "stats")   return <StatsScreen stats={allTimeStats} matches={matches} setMatches={setMatches} />;
     if (view === "log")     return <LogScreen matches={matches} onDelete={deleteMatch} />;
     if (view === "archive") return <ArchiveScreen matches={matches} currentMonthKey={currentMonthKey} />;
   }
@@ -414,9 +415,41 @@ export default function BalootApp() {
 }
 
 // =====================================================================
+// Autocomplete Input
+// =====================================================================
+function AutoInput({ value, onChange, placeholder, suggestions }) {
+  const [open, setOpen] = useState(false);
+  const filtered = suggestions.filter((s) => s && s.includes(value) && s !== value);
+
+  return (
+    <div style={{ position:"relative" }}>
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}`, fontSize:14, width:"100%" }}
+      />
+      {open && filtered.length > 0 && (
+        <div style={{ position:"absolute", top:"100%", right:0, left:0, background:C.surface, border:`1px solid ${C.line}`, borderRadius:10, zIndex:50, boxShadow:"0 4px 12px rgba(0,0,0,0.1)", marginTop:2 }}>
+          {filtered.slice(0,5).map((s) => (
+            <div key={s} onMouseDown={() => { onChange(s); setOpen(false); }}
+              style={{ padding:"9px 12px", fontSize:14, fontFamily:"'Cairo',sans-serif", cursor:"pointer", borderBottom:`1px solid ${C.line}` }}>
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =====================================================================
 // Home Screen
 // =====================================================================
-function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles }) {
+function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles, allPlayers }) {
   function update(field, val) { setNames({ ...names, [field]: val }); }
   const ready = names.A1 && names.A2 && names.B1 && names.B2;
   const titleEntries = Object.entries(titles).filter(([, v]) => v);
@@ -464,11 +497,11 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
             <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:13, color:C.a, marginBottom:10, textAlign:"center" }}>فريق أ</div>
             <div style={{ marginBottom:8 }}>
               <label>لاعب ١</label>
-              <input type="text" value={names.A1} onChange={(e) => update("A1", e.target.value)} style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}` }} />
+              <AutoInput value={names.A1} onChange={(v) => update("A1", v)} suggestions={allPlayers} />
             </div>
             <div>
               <label>لاعب ٢</label>
-              <input type="text" value={names.A2} onChange={(e) => update("A2", e.target.value)} style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}` }} />
+              <AutoInput value={names.A2} onChange={(v) => update("A2", v)} suggestions={allPlayers} />
             </div>
           </div>
 
@@ -482,11 +515,11 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles 
             <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:13, color:C.b, marginBottom:10, textAlign:"center" }}>فريق ب</div>
             <div style={{ marginBottom:8 }}>
               <label>لاعب ١</label>
-              <input type="text" value={names.B1} onChange={(e) => update("B1", e.target.value)} style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}` }} />
+              <AutoInput value={names.B1} onChange={(v) => update("B1", v)} suggestions={allPlayers} />
             </div>
             <div>
               <label>لاعب ٢</label>
-              <input type="text" value={names.B2} onChange={(e) => update("B2", e.target.value)} style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}` }} />
+              <AutoInput value={names.B2} onChange={(v) => update("B2", v)} suggestions={allPlayers} />
             </div>
           </div>
         </div>
@@ -878,16 +911,75 @@ function CasualScreen({ casual, setCasual }) {
 // =====================================================================
 // Stats Screen
 // =====================================================================
-function StatsScreen({ stats }) {
+function StatsScreen({ stats, matches, setMatches }) {
   const players = Object.keys(stats).sort((a,b) => stats[b].wins - stats[a].wins);
-  const [expanded, setExpanded] = useState(null);
+  const [expanded,  setExpanded]  = useState(null);
+  const [showMerge, setShowMerge] = useState(false);
+  const [mergeA,    setMergeA]    = useState("");
+  const [mergeB,    setMergeB]    = useState("");
+  const [mergeFinal,setMergeFinal]= useState("");
+  const [mergeMsg,  setMergeMsg]  = useState("");
+
+  async function doMerge() {
+    if (!mergeA || !mergeB || !mergeFinal) { setMergeMsg("اختر الاسمين وأدخل الاسم النهائي"); return; }
+    if (mergeA === mergeB) { setMergeMsg("الاسمان متطابقان"); return; }
+    const rep = (n) => (n === mergeA || n === mergeB) ? mergeFinal : n;
+    const updated = matches.map((m) => ({
+      ...m,
+      teamA: m.teamA.map(rep),
+      teamB: m.teamB.map(rep),
+      rounds: (m.rounds||[]).map((r) => ({
+        ...r,
+        qaidPlayer:  r.qaidPlayer  ? rep(r.qaidPlayer)  : r.qaidPlayer,
+        buyerPlayer: r.buyerPlayer ? rep(r.buyerPlayer) : r.buyerPlayer,
+        projectDetails: r.projectDetails ? r.projectDetails.map((d) => ({ ...d, player: rep(d.player) })) : r.projectDetails,
+      })),
+    }));
+    setMatches(updated);
+    await saveMatches(updated);
+    setMergeMsg(`تم دمج "${mergeA}" و "${mergeB}" تحت "${mergeFinal}"`);
+    setMergeA(""); setMergeB(""); setMergeFinal("");
+  }
 
   if (!players.length)
     return <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيمات رسمية بعد.</div>;
 
   return (
+    <div>
     <div className="card">
-      <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, marginBottom:14, color:C.ink }}>إحصائيات اللاعبين</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+        <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, color:C.ink }}>إحصائيات اللاعبين</div>
+        <button className="pill pill-inactive" style={{ fontSize:12 }} onClick={() => { setShowMerge(!showMerge); setMergeMsg(""); }}>دمج لاعبين</button>
+      </div>
+
+      {showMerge && (
+        <div style={{ background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:"12px 14px", marginBottom:14 }}>
+          <div style={{ display:"flex", gap:8, marginBottom:10, flexWrap:"wrap" }}>
+            <div style={{ flex:1, minWidth:120 }}>
+              <label>الاسم الأول</label>
+              <select value={mergeA} onChange={(e) => setMergeA(e.target.value)}
+                style={{ width:"100%", padding:"9px 10px", borderRadius:10, border:`1px solid ${C.line}`, background:C.surface, fontFamily:"'Cairo',sans-serif", fontSize:14, color:C.ink }}>
+                <option value="">اختر...</option>
+                {players.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div style={{ flex:1, minWidth:120 }}>
+              <label>الاسم الثاني</label>
+              <select value={mergeB} onChange={(e) => setMergeB(e.target.value)}
+                style={{ width:"100%", padding:"9px 10px", borderRadius:10, border:`1px solid ${C.line}`, background:C.surface, fontFamily:"'Cairo',sans-serif", fontSize:14, color:C.ink }}>
+                <option value="">اختر...</option>
+                {players.filter((p) => p !== mergeA).map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+          <label>الاسم النهائي</label>
+          <input type="text" value={mergeFinal} onChange={(e) => setMergeFinal(e.target.value)}
+            placeholder="اكتب الاسم اللي تبيه يبقى..."
+            style={{ marginBottom:10 }} />
+          {mergeMsg && <div style={{ fontSize:13, color: mergeMsg.startsWith("تم") ? C.a : C.b, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>{mergeMsg}</div>}
+          <button onClick={doMerge} className="pill pill-active" style={{ width:"100%" }}>تأكيد الدمج</button>
+        </div>
+      )}
       {players.map((name) => {
         const s = stats[name], isOpen = expanded === name, rating = computeRating(stats, name);
         return (
@@ -936,6 +1028,7 @@ function StatsScreen({ stats }) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }
