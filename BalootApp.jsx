@@ -518,6 +518,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const [showSwap,     setShowSwap]     = useState(false);
   const [swapOld,      setSwapOld]      = useState("");
   const [swapNew,      setSwapNew]      = useState("");
+  const [showGame,     setShowGame]     = useState(false);
   const [showKaboot,   setShowKaboot]   = useState(false);
   const [showBuyer,    setShowBuyer]    = useState(false);
   const [showProjects, setShowProjects] = useState(false);
@@ -525,7 +526,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   function resetForm() {
     setKabootTeam(null); setProjectTeam("none"); setProjectAssign({});
     setGenA(""); setGenB(""); setQaidPlayer(""); setBuyerPlayer(""); setError("");
-    setShowKaboot(false); setShowBuyer(false); setShowProjects(false);
+    setShowGame(false); setShowKaboot(false); setShowBuyer(false); setShowProjects(false);
   }
 
   function adjustProjectAssign(projectKey, player, delta) {
@@ -662,7 +663,12 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           </div>
         </div>
       ) : (
-        <div className="card">
+        <>
+          {/* زر تم — تحت السكور مباشرة */}
+          {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
+          <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:12 }}>تم</button>
+
+          <div className="card">
           <div style={{ display:"flex", gap:10, marginBottom:14 }}>
             <div style={{ flex:1 }}>
               <label>{teamA.join(" / ")}</label>
@@ -681,17 +687,18 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           </div>
 
           {!qaidPlayer && (
-            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-              <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
-              <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
-            </div>
-          )}
-
-          {!qaidPlayer && (
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
+              <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
               <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
               <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
               <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
+            </div>
+          )}
+
+          {!qaidPlayer && showGame && (
+            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+              <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
+              <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
             </div>
           )}
 
@@ -759,9 +766,8 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             </div>
           )}
 
-          {error && <div style={{ color:C.b, fontSize:13, marginBottom:10, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
-          <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif" }}>تم</button>
-        </div>
+          </div>
+        </>
       )}
 
       {rounds.length > 0 && (
