@@ -584,6 +584,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     const nextTurn = ((match.turnIndex ?? 0) + 1) % 4;
     const updated = { ...match, cumA:nA, cumB:nB, rounds:newRounds, winner:newWinner, turnIndex:nextTurn };
     setMatch(updated); resetForm();
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50);
     if (newWinner) onFinish(updated);
   }
 
