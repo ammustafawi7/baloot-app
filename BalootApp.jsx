@@ -8,6 +8,21 @@ const DELETE_PASSWORD = "بلوت";
 const MIN_RANKED_FOR_RATING = 10;
 const MIN_RANKED_FOR_TITLE  = 5;
 
+// لاعبون ثابتون يظهرون دائماً في الـ autocomplete
+const STATIC_PLAYERS = ["علي", "بو خليفه"];
+
+// خريطة دمج الأسماء — تشتغل مرة وحدة
+const NAME_MIGRATION = {
+  "بوسعيد":   "بو سعيد",
+  "بودانة":   "بو دانه",
+  "بوشهاب":   "بو دانه",
+  "احمد":     "احمد ع",
+  "بو فاطمه": "هاشم",
+  "خالد":     "بو شمه",
+};
+const MIGRATION_KEY = "baloot_migration_v1";
+function repName(n) { return NAME_MIGRATION[n] ?? n; }
+
 // Design tokens
 const C = {
   bg:        "#F5F0E8",
@@ -339,7 +354,39 @@ export default function BalootApp() {
   const [activeMatch, setActiveMatch] = useState(() => loadLocal("baloot_active_match", null));
   const [casual,      setCasual]      = useState(() => loadLocal("baloot_casual", { us:0, them:0, history:[] }));
 
-  useEffect(() => { loadMatches().then((m) => { setMatches(m); setLoading(false); }); }, []);
+  useEffect(() => {
+    loadMatches().then(async (m) => {
+      // one-time migration
+      if (!localStorage.getItem(MIGRATION_KEY)) {
+        const needsMigration = m.some((match) =>
+          [...(match.teamA||[]), ...(match.teamB||[])].some((n) => NAME_MIGRATION[n])
+        );
+        if (needsMigration) {
+          const migrated = m.map((match) => ({
+            ...match,
+            teamA: (match.teamA||[]).map(repName),
+            teamB: (match.teamB||[]).map(repName),
+            rounds: (match.rounds||[]).map((r) => ({
+              ...r,
+              label: r.label ? Object.entries(NAME_MIGRATION).reduce((s,[o,n]) => s.replaceAll(o,n), r.label) : r.label,
+              qaidPlayer:  r.qaidPlayer  ? repName(r.qaidPlayer)  : r.qaidPlayer,
+              buyerPlayer: r.buyerPlayer ? repName(r.buyerPlayer) : r.buyerPlayer,
+              projectDetails: (r.projectDetails||[]).map((d) => ({ ...d, player: repName(d.player) })),
+            })),
+          }));
+          await saveMatches(migrated);
+          localStorage.setItem(MIGRATION_KEY, "done");
+          setMatches(migrated);
+        } else {
+          localStorage.setItem(MIGRATION_KEY, "done");
+          setMatches(m);
+        }
+      } else {
+        setMatches(m);
+      }
+      setLoading(false);
+    });
+  }, []);
   useEffect(() => { saveLocal("baloot_active_match", activeMatch); }, [activeMatch]);
   useEffect(() => { saveLocal("baloot_casual",       casual);      }, [casual]);
   useEffect(() => { saveLocal("baloot_view",         view);        }, [view]);
@@ -363,24 +410,6 @@ export default function BalootApp() {
   async function deleteMatch(date) {
     const next = matches.filter((m) => m.date !== date);
     setMatches(next); await saveMatches(next);
-  }
-
-  async function mergeMatches(nameA, nameB, nameFinal) {
-    const rep = (n) => (n === nameA || n === nameB) ? nameFinal : n;
-    const updated = matches.map((m) => ({
-      ...m,
-      teamA: m.teamA.map(rep),
-      teamB: m.teamB.map(rep),
-      rounds: (m.rounds||[]).map((r) => ({
-        ...r,
-        label: r.label ? r.label.replace(nameA, nameFinal).replace(nameB, nameFinal) : r.label,
-        qaidPlayer:  r.qaidPlayer  ? rep(r.qaidPlayer)  : r.qaidPlayer,
-        buyerPlayer: r.buyerPlayer ? rep(r.buyerPlayer) : r.buyerPlayer,
-        projectDetails: r.projectDetails ? r.projectDetails.map((d) => ({ ...d, player: rep(d.player) })) : r.projectDetails,
-      })),
-    }));
-    setMatches(updated);
-    await saveMatches(updated);
   }
 
   async function removeLastSavedMatch() {
@@ -409,13 +438,20 @@ export default function BalootApp() {
           <CasualScreen casual={casual} setCasual={setCasual} />
         </div>
       );
-      const allPlayerNames = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]))).filter(Boolean);
+      // احسب عدد المباريات لكل لاعب للترتيب
+      const matchCount = {};
+      matches.forEach((m) => [...(m.teamA||[]), ...(m.teamB||[])].forEach((n) => { matchCount[n] = (matchCount[n]||0) + 1; }));
+      const dynamicPlayers = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]))).filter(Boolean);
+      const allPlayerNames = [
+        ...dynamicPlayers.sort((a,b) => (matchCount[b]||0) - (matchCount[a]||0)),
+        ...STATIC_PLAYERS.filter((p) => !dynamicPlayers.includes(p)),
+      ];
       return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
     }
     if (view === "play") return activeMatch
       ? <PlayScreen match={activeMatch} setMatch={setActiveMatch} onFinish={finishMatch} onCancel={cancelMatch} onUndoFinish={removeLastSavedMatch} onNewMatch={() => { setActiveMatch(null); setView("setup"); }} />
       : <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيم جاري — ابدأ قيم جديد من اللعب</div>;
-    if (view === "stats")   return <StatsScreen stats={allTimeStats} players={Object.keys(allTimeStats)} onMerge={mergeMatches} />;
+    if (view === "stats")   return <StatsScreen stats={allTimeStats} />;
     if (view === "log")     return <LogScreen matches={matches} onDelete={deleteMatch} />;
     if (view === "archive") return <ArchiveScreen matches={matches} currentMonthKey={currentMonthKey} />;
   }
@@ -928,29 +964,9 @@ function CasualScreen({ casual, setCasual }) {
 // =====================================================================
 // Stats Screen
 // =====================================================================
-function StatsScreen({ stats, players: allPlayers, onMerge }) {
-  const players = (allPlayers || Object.keys(stats)).sort((a,b) => (stats[b]?.wins||0) - (stats[a]?.wins||0));
-  const [expanded,  setExpanded]  = useState(null);
-  const [showMerge, setShowMerge] = useState(false);
-  const [mergeA,    setMergeA]    = useState("");
-  const [mergeB,    setMergeB]    = useState("");
-  const [mergeFinal,setMergeFinal]= useState("");
-  const [mergeMsg,  setMergeMsg]  = useState("");
-  const [merging,   setMerging]   = useState(false);
-
-  async function doMerge() {
-    if (!mergeA || !mergeB || !mergeFinal) { setMergeMsg("اختر الاسمين وأدخل الاسم النهائي"); return; }
-    if (mergeA === mergeB) { setMergeMsg("الاسمان متطابقان"); return; }
-    setMerging(true);
-    try {
-      await onMerge(mergeA, mergeB, mergeFinal);
-      setMergeMsg(`✓ تم دمج "${mergeA}" و "${mergeB}" تحت "${mergeFinal}"`);
-      setMergeA(""); setMergeB(""); setMergeFinal("");
-    } catch(e) {
-      setMergeMsg("حدث خطأ، حاول مجدداً");
-    }
-    setMerging(false);
-  }
+function StatsScreen({ stats }) {
+  const players = Object.keys(stats).sort((a,b) => (stats[b]?.wins||0) - (stats[a]?.wins||0));
+  const [expanded, setExpanded] = useState(null);
 
   if (!players.length)
     return <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيمات رسمية بعد.</div>;
@@ -958,39 +974,7 @@ function StatsScreen({ stats, players: allPlayers, onMerge }) {
   return (
     <div>
     <div className="card">
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-        <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, color:C.ink }}>إحصائيات اللاعبين</div>
-        <button className="pill pill-inactive" style={{ fontSize:12 }} onClick={() => { setShowMerge(!showMerge); setMergeMsg(""); }}>دمج لاعبين</button>
-      </div>
-
-      {showMerge && (
-        <div style={{ background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:"12px 14px", marginBottom:14 }}>
-          <div style={{ display:"flex", gap:8, marginBottom:10, flexWrap:"wrap" }}>
-            <div style={{ flex:1, minWidth:120 }}>
-              <label>الاسم الأول</label>
-              <select value={mergeA} onChange={(e) => setMergeA(e.target.value)}
-                style={{ width:"100%", padding:"9px 10px", borderRadius:10, border:`1px solid ${C.line}`, background:C.surface, fontFamily:"'Cairo',sans-serif", fontSize:14, color:C.ink }}>
-                <option value="">اختر...</option>
-                {players.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div style={{ flex:1, minWidth:120 }}>
-              <label>الاسم الثاني</label>
-              <select value={mergeB} onChange={(e) => setMergeB(e.target.value)}
-                style={{ width:"100%", padding:"9px 10px", borderRadius:10, border:`1px solid ${C.line}`, background:C.surface, fontFamily:"'Cairo',sans-serif", fontSize:14, color:C.ink }}>
-                <option value="">اختر...</option>
-                {players.filter((p) => p !== mergeA).map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-          </div>
-          <label>الاسم النهائي</label>
-          <input type="text" value={mergeFinal} onChange={(e) => setMergeFinal(e.target.value)}
-            placeholder="اكتب الاسم اللي تبيه يبقى..."
-            style={{ marginBottom:10 }} />
-          {mergeMsg && <div style={{ fontSize:13, color: mergeMsg.startsWith("✓") ? C.a : C.b, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>{mergeMsg}</div>}
-          <button onClick={doMerge} disabled={merging} className="pill pill-active" style={{ width:"100%", opacity: merging ? 0.6 : 1 }}>{merging ? "جاري الدمج..." : "تأكيد الدمج"}</button>
-        </div>
-      )}
+      <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, color:C.ink, marginBottom:14 }}>إحصائيات اللاعبين</div>
       {players.map((name) => {
         const s = stats[name], isOpen = expanded === name, rating = computeRating(stats, name);
         return (
