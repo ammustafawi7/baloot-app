@@ -8,9 +8,6 @@ const DELETE_PASSWORD = "بلوت";
 const MIN_RANKED_FOR_RATING = 10;
 const MIN_RANKED_FOR_TITLE  = 5;
 
-// لاعبون ثابتون يظهرون دائماً في الـ autocomplete
-const STATIC_PLAYERS = ["علي", "بو خليفه"];
-
 // خريطة دمج الأسماء — تشتغل مرة وحدة
 const NAME_MIGRATION = {
   "بوسعيد":   "بو سعيد",
@@ -20,8 +17,12 @@ const NAME_MIGRATION = {
   "بو فاطمه": "هاشم",
   "خالد":     "بو شمه",
 };
-const MIGRATION_KEY = "baloot_migration_v1";
-function repName(n) { return NAME_MIGRATION[n] ?? n; }
+const MIGRATION_KEY = "baloot_migration_v2";
+function repName(n) {
+  if (!n) return n;
+  const t = n.trim();
+  return NAME_MIGRATION[t] ?? t;
+}
 
 // Design tokens
 const C = {
@@ -358,10 +359,7 @@ export default function BalootApp() {
     loadMatches().then(async (m) => {
       // one-time migration
       if (!localStorage.getItem(MIGRATION_KEY)) {
-        const needsMigration = m.some((match) =>
-          [...(match.teamA||[]), ...(match.teamB||[])].some((n) => NAME_MIGRATION[n])
-        );
-        if (needsMigration) {
+        {
           const migrated = m.map((match) => ({
             ...match,
             teamA: (match.teamA||[]).map(repName),
@@ -377,9 +375,6 @@ export default function BalootApp() {
           await saveMatches(migrated);
           localStorage.setItem(MIGRATION_KEY, "done");
           setMatches(migrated);
-        } else {
-          localStorage.setItem(MIGRATION_KEY, "done");
-          setMatches(m);
         }
       } else {
         setMatches(m);
@@ -440,12 +435,9 @@ export default function BalootApp() {
       );
       // احسب عدد المباريات لكل لاعب للترتيب
       const matchCount = {};
-      matches.forEach((m) => [...(m.teamA||[]), ...(m.teamB||[])].forEach((n) => { matchCount[n] = (matchCount[n]||0) + 1; }));
-      const dynamicPlayers = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]))).filter(Boolean);
-      const allPlayerNames = [
-        ...dynamicPlayers.sort((a,b) => (matchCount[b]||0) - (matchCount[a]||0)),
-        ...STATIC_PLAYERS.filter((p) => !dynamicPlayers.includes(p)),
-      ];
+      matches.forEach((m) => [...(m.teamA||[]), ...(m.teamB||[])].forEach((n) => { if(n) matchCount[n] = (matchCount[n]||0) + 1; }));
+      const allPlayerNames = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]).map(n => n?.trim()).filter(Boolean)))
+        .sort((a,b) => (matchCount[b]||0) - (matchCount[a]||0));
       return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
     }
     if (view === "play") return activeMatch
