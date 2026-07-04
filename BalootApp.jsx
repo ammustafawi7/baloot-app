@@ -47,13 +47,9 @@ const PROJECTS = [
 ];
 
 const TITLES = {
-  mohannak: "محنك",
-  shuja:    "ريّال",
   ghashash: "هطف",
-  mahzoo:   "حظ هنود",
-  khawwaf:  "مزهرية",
-  baidh:    "لو قاعد فالبيت احسن",
   ustora:   "المعزب",
+  baidh:    "لو قاعد فالبيت احسن",
 };
 
 import { initializeApp } from "firebase/app";
@@ -146,19 +142,10 @@ function computeTitles(stats) {
     for (const n of names) { const v = stats[n][field]; if (v > bestVal) { bestVal = v; best = n; } }
     return bestVal > 0 ? { name: best, value: bestVal, criteriaLabel } : null;
   }
-  function leastBuyer() {
-    let best = null, bestVal = Infinity;
-    for (const n of names) { const v = stats[n].sunBuys + stats[n].hokomBuys; if (v < bestVal) { bestVal = v; best = n; } }
-    return best ? { name: best, value: bestVal, criteriaLabel: "مرة شراء (صن أو حكم)" } : null;
-  }
   return {
-    mohannak: topBy("hokomBuys",    "مرة شراء حكم"),
-    shuja:    topBy("sunBuys",      "مرة شراء صن"),
-    ghashash: topBy("qaid",         "مرة تسبب بقيد"),
-    mahzoo:   topBy("projectsTotal","مشروع"),
-    khawwaf:  leastBuyer(),
-    baidh:    topBy("losses",       "خسارة"),
-    ustora:   topBy("wins",         "فوز"),
+    ghashash: topBy("qaid",   "مرة تسبب بقيد"),
+    ustora:   topBy("wins",   "فوز"),
+    baidh:    topBy("losses", "خسارة"),
   };
 }
 
