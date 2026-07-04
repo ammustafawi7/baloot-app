@@ -660,7 +660,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
       {!winner && (
         <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>
-          <button onClick={advanceTurn} style={{ width:52, height:52, borderRadius:"50%", background:C.surface, border:`2px solid ${C.line}`, fontSize:26, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.07)", transition:"transform 0.15s" }}>
+          <button onClick={advanceTurn} style={{ width:52, height:52, borderRadius:"50%", background:C.goldSoft, border:`2px solid ${C.gold}55`, fontSize:26, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.07)", color:"#7A5500" }}>
             {ARROWS[turnIndex]}
           </button>
         </div>
