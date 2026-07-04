@@ -8,21 +8,8 @@ const DELETE_PASSWORD = "بلوت";
 const MIN_RANKED_FOR_RATING = 10;
 const MIN_RANKED_FOR_TITLE  = 5;
 
-// خريطة دمج الأسماء — تشتغل مرة وحدة
-const NAME_MIGRATION = {
-  "بوسعيد":   "بو سعيد",
-  "بودانة":   "بو دانه",
-  "بوشهاب":   "بو دانه",
-  "احمد":     "احمد ع",
-  "بو فاطمه": "هاشم",
-  "خالد":     "بو شمه",
-};
-const MIGRATION_KEY = "baloot_migration_v2";
-function repName(n) {
-  if (!n) return n;
-  const t = n.trim();
-  return NAME_MIGRATION[t] ?? t;
-}
+// لاعبون ثابتون يظهرون دائماً في الـ autocomplete (بدون سجل بعد)
+const STATIC_PLAYERS = ["علي", "بو خليفه"];
 
 // Design tokens
 const C = {
@@ -355,33 +342,7 @@ export default function BalootApp() {
   const [activeMatch, setActiveMatch] = useState(() => loadLocal("baloot_active_match", null));
   const [casual,      setCasual]      = useState(() => loadLocal("baloot_casual", { us:0, them:0, history:[] }));
 
-  useEffect(() => {
-    loadMatches().then(async (m) => {
-      // one-time migration
-      if (!localStorage.getItem(MIGRATION_KEY)) {
-        {
-          const migrated = m.map((match) => ({
-            ...match,
-            teamA: (match.teamA||[]).map(repName),
-            teamB: (match.teamB||[]).map(repName),
-            rounds: (match.rounds||[]).map((r) => ({
-              ...r,
-              label: r.label ? Object.entries(NAME_MIGRATION).reduce((s,[o,n]) => s.replaceAll(o,n), r.label) : r.label,
-              qaidPlayer:  r.qaidPlayer  ? repName(r.qaidPlayer)  : r.qaidPlayer,
-              buyerPlayer: r.buyerPlayer ? repName(r.buyerPlayer) : r.buyerPlayer,
-              projectDetails: (r.projectDetails||[]).map((d) => ({ ...d, player: repName(d.player) })),
-            })),
-          }));
-          await saveMatches(migrated);
-          localStorage.setItem(MIGRATION_KEY, "done");
-          setMatches(migrated);
-        }
-      } else {
-        setMatches(m);
-      }
-      setLoading(false);
-    });
-  }, []);
+  useEffect(() => { loadMatches().then((m) => { setMatches(m); setLoading(false); }); }, []);
   useEffect(() => { saveLocal("baloot_active_match", activeMatch); }, [activeMatch]);
   useEffect(() => { saveLocal("baloot_casual",       casual);      }, [casual]);
   useEffect(() => { saveLocal("baloot_view",         view);        }, [view]);
@@ -436,8 +397,9 @@ export default function BalootApp() {
       // احسب عدد المباريات لكل لاعب للترتيب
       const matchCount = {};
       matches.forEach((m) => [...(m.teamA||[]), ...(m.teamB||[])].forEach((n) => { if(n) matchCount[n] = (matchCount[n]||0) + 1; }));
-      const allPlayerNames = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]).map(n => n?.trim()).filter(Boolean)))
+      const dynamicPlayers = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]).map(n => n?.trim()).filter(Boolean)))
         .sort((a,b) => (matchCount[b]||0) - (matchCount[a]||0));
+      const allPlayerNames = [...dynamicPlayers, ...STATIC_PLAYERS.filter(p => !dynamicPlayers.includes(p))];
       return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
     }
     if (view === "play") return activeMatch
