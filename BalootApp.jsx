@@ -618,10 +618,10 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const filteredProjects = PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly));
 
   const scoreCard = (team, cum, pct, bg) => (
-    <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff" }}>
-      <div style={{ fontSize:12, opacity:0.8, fontFamily:"'IBM Plex Sans Arabic',sans-serif", marginBottom:4 }}>{team.join(" / ")}</div>
-      <div style={{ fontSize:36, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
-      <div className="progress-track"><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
+    <div style={{ flex:1, background:bg, borderRadius:20, padding:"22px 16px", color:"#fff", textAlign:"center", minHeight:140 }}>
+      <div style={{ fontSize:15, fontWeight:800, fontFamily:"'Cairo',sans-serif", marginBottom:10, letterSpacing:0.2 }}>{team.join(" / ")}</div>
+      <div style={{ fontSize:68, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
+      <div className="progress-track" style={{ marginTop:12 }}><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
     </div>
   );
 
@@ -665,113 +665,113 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
         </div>
       ) : (
         <>
+          {/* كارد ١: صن/حكم + إدخال الأرقام + تم/تراجع */}
           <div className="card">
-          <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-            <div style={{ flex:1 }}>
-              <label>{teamA.join(" / ")}</label>
-              <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} style={{ fontSize:16 }} />
+            {showGame && (
+              <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+                <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
+                <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
+              </div>
+            )}
+
+            <div style={{ display:"flex", gap:10, marginBottom:14 }}>
+              <div style={{ flex:1 }}>
+                <label style={{ fontSize:14, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamA.join(" / ")}</label>
+                <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} style={{ fontSize:16 }} />
+              </div>
+              <div style={{ flex:1 }}>
+                <label style={{ fontSize:14, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamB.join(" / ")}</label>
+                <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
+              </div>
             </div>
-            <div style={{ flex:1 }}>
-              <label>{teamB.join(" / ")}</label>
-              <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
-            </div>
+
+            {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
+            <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom: rounds.length > 0 ? 10 : 0 }}>تم</button>
+            {rounds.length > 0 && (
+              <button onClick={undoLastRound} className="pill pill-red" style={{ width:"100%" }}>تراجع</button>
+            )}
           </div>
 
-          {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
-          <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:12 }}>تم</button>
-          {rounds.length > 0 && (
-            <button onClick={undoLastRound} className="pill pill-red" style={{ width:"100%" }}>تراجع</button>
-          )}
-
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:14, marginBottom:4 }}>
-            <button className={`pill ${showQaid    ?"pill-active":"pill-inactive"}`} onClick={() => setShowQaid(!showQaid)}>قيد {showQaid?"▲":"▼"}</button>
-            <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
-            <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
-            <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
-            <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
-          </div>
-
-          {showQaid && (
-            <div style={{ marginTop:12, marginBottom:4 }}>
-              <label className="bold-label">قيد</label>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                <button className={`pill ${!qaidPlayer?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
-                {allPlayers.map((p) => <button key={p} className={`pill ${qaidPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>)}
-              </div>
+          {/* كارد ٢: صن/حكم toggle + كبوت + الشراي + قيد + مشاريع */}
+          <div className="card">
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:4 }}>
+              <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
+              <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
+              <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
+              <button className={`pill ${showQaid    ?"pill-active":"pill-inactive"}`} onClick={() => setShowQaid(!showQaid)}>قيد {showQaid?"▲":"▼"}</button>
+              <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
             </div>
-          )}
 
-          {!qaidPlayer && showGame && (
-            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-              <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
-              <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
-            </div>
-          )}
-
-          {!qaidPlayer && showKaboot && (
-            <div style={{ marginBottom:12 }}>
-              <label className="bold-label">كبوت</label>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                <button className={`pill ${kabootTeam===null?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam(null)}>لا</button>
-                <button className={`pill ${kabootTeam==="A" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("A")}>{teamA.join(" / ")}</button>
-                <button className={`pill ${kabootTeam==="B" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("B")}>{teamB.join(" / ")}</button>
+            {showQaid && (
+              <div style={{ marginTop:12 }}>
+                <label className="bold-label">قيد</label>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <button className={`pill ${!qaidPlayer?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
+                  {allPlayers.map((p) => <button key={p} className={`pill ${qaidPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>)}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {!qaidPlayer && showBuyer && (
-            <div style={{ marginBottom:12 }}>
-              <label className="bold-label">الشراي</label>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                <button className={`pill ${!buyerPlayer?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer("")}>بدون</button>
-                {allPlayers.map((p) => <button key={p} className={`pill ${buyerPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer(p)}>{p}</button>)}
+            {!qaidPlayer && showKaboot && (
+              <div style={{ marginTop:12 }}>
+                <label className="bold-label">كبوت</label>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <button className={`pill ${kabootTeam===null?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam(null)}>لا</button>
+                  <button className={`pill ${kabootTeam==="A" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("A")}>{teamA.join(" / ")}</button>
+                  <button className={`pill ${kabootTeam==="B" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("B")}>{teamB.join(" / ")}</button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {!qaidPlayer && showProjects && (
-            <div style={{ marginBottom:12 }}>
-              <label className="bold-label">مشاريع</label>
-              <div style={{ display:"flex", gap:6, marginBottom:10 }}>
-                <button className={`pill ${projectTeam==="none"?"pill-active":"pill-inactive"}`} onClick={() => { setProjectTeam("none"); setProjectAssign({}); }}>بدون</button>
-                <button className={`pill ${projectTeam==="A"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("A")}>{teamA.join(" / ")}</button>
-                <button className={`pill ${projectTeam==="B"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("B")}>{teamB.join(" / ")}</button>
+            {!qaidPlayer && showBuyer && (
+              <div style={{ marginTop:12 }}>
+                <label className="bold-label">الشراي</label>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <button className={`pill ${!buyerPlayer?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer("")}>بدون</button>
+                  {allPlayers.map((p) => <button key={p} className={`pill ${buyerPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer(p)}>{p}</button>)}
+                </div>
               </div>
-              {projectTeam !== "none" && (
-                <div style={{ background:C.bg, borderRadius:10, border:`1px solid ${C.line}`, overflow:"hidden" }}>
-                  {/* Scrollable grid */}
-                  <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
-                    <div style={{ minWidth: filteredProjects.length * 80 + 90, padding:"10px 12px" }}>
-                      {/* Header row */}
-                      <div style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, marginBottom:8 }}>
-                        <span />
-                        {filteredProjects.map((p) => (
-                          <span key={p.key} style={{ fontSize:12, textAlign:"center", fontWeight:700, fontFamily:"'Cairo',sans-serif", color:C.inkSoft }}>{p.label}</span>
+            )}
+
+            {!qaidPlayer && showProjects && (
+              <div style={{ marginTop:12 }}>
+                <label className="bold-label">مشاريع</label>
+                <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+                  <button className={`pill ${projectTeam==="none"?"pill-active":"pill-inactive"}`} onClick={() => { setProjectTeam("none"); setProjectAssign({}); }}>بدون</button>
+                  <button className={`pill ${projectTeam==="A"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("A")}>{teamA.join(" / ")}</button>
+                  <button className={`pill ${projectTeam==="B"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("B")}>{teamB.join(" / ")}</button>
+                </div>
+                {projectTeam !== "none" && (
+                  <div style={{ background:C.bg, borderRadius:10, border:`1px solid ${C.line}`, overflow:"hidden" }}>
+                    <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+                      <div style={{ minWidth: filteredProjects.length * 80 + 90, padding:"10px 12px" }}>
+                        <div style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, marginBottom:8 }}>
+                          <span />
+                          {filteredProjects.map((p) => (
+                            <span key={p.key} style={{ fontSize:12, textAlign:"center", fontWeight:700, fontFamily:"'Cairo',sans-serif", color:C.inkSoft }}>{p.label}</span>
+                          ))}
+                        </div>
+                        {projTeamPlayers.map((pl) => (
+                          <div key={pl} style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, alignItems:"center", marginBottom:6 }}>
+                            <span style={{ fontSize:13, fontFamily:"'Cairo',sans-serif", fontWeight:600, color:C.ink }}>{pl}</span>
+                            {filteredProjects.map((p) => {
+                              const count = (projectAssign[p.key]?.[pl]) || 0;
+                              return (
+                                <div key={p.key} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:3 }}>
+                                  <button onClick={() => adjustProjectAssign(p.key, pl, -1)} style={{ background:C.b, color:"#fff", border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
+                                  <span style={{ minWidth:14, textAlign:"center", fontSize:13, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{count}</span>
+                                  <button onClick={() => adjustProjectAssign(p.key, pl,  1)} style={{ background:C.gold, border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>+</button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         ))}
                       </div>
-                      {/* Player rows */}
-                      {projTeamPlayers.map((pl) => (
-                        <div key={pl} style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, alignItems:"center", marginBottom:6 }}>
-                          <span style={{ fontSize:13, fontFamily:"'Cairo',sans-serif", fontWeight:600, color:C.ink }}>{pl}</span>
-                          {filteredProjects.map((p) => {
-                            const count = (projectAssign[p.key]?.[pl]) || 0;
-                            return (
-                              <div key={p.key} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:3 }}>
-                                <button onClick={() => adjustProjectAssign(p.key, pl, -1)} style={{ background:C.b, color:"#fff", border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
-                                <span style={{ minWidth:14, textAlign:"center", fontSize:13, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{count}</span>
-                                <button onClick={() => adjustProjectAssign(p.key, pl,  1)} style={{ background:C.gold, border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>+</button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
+                )}
+              </div>
+            )}
           </div>
         </>
       )}
