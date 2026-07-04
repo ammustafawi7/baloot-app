@@ -618,10 +618,10 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const filteredProjects = PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly));
 
   const scoreCard = (team, cum, pct, bg) => (
-    <div style={{ flex:1, background:bg, borderRadius:20, padding:"22px 16px", color:"#fff", textAlign:"center", minHeight:140 }}>
-      <div style={{ fontSize:15, fontWeight:800, fontFamily:"'Cairo',sans-serif", marginBottom:10, letterSpacing:0.2 }}>{team.join(" / ")}</div>
-      <div style={{ fontSize:68, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
-      <div className="progress-track" style={{ marginTop:12 }}><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
+    <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff" }}>
+      <div style={{ fontSize:36, fontWeight:900, fontFamily:"'Cairo',sans-serif", marginBottom:4 }}>{team.join(" / ")}</div>
+      <div style={{ fontSize:36, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
+      <div className="progress-track"><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
     </div>
   );
 
@@ -665,22 +665,15 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
         </div>
       ) : (
         <>
-          {/* كارد ١: صن/حكم + إدخال الأرقام + تم/تراجع */}
+          {/* كارد ١: إدخال الأرقام + تم/تراجع */}
           <div className="card">
-            {showGame && (
-              <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-                <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
-                <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
-              </div>
-            )}
-
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:14, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamA.join(" / ")}</label>
+                <label style={{ fontSize:15, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamA.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} style={{ fontSize:16 }} />
               </div>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:14, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamB.join(" / ")}</label>
+                <label style={{ fontSize:15, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamB.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
               </div>
             </div>
@@ -701,6 +694,13 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
               <button className={`pill ${showQaid    ?"pill-active":"pill-inactive"}`} onClick={() => setShowQaid(!showQaid)}>قيد {showQaid?"▲":"▼"}</button>
               <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
             </div>
+
+            {showGame && (
+              <div style={{ marginTop:12, display:"flex", gap:8 }}>
+                <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
+                <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
+              </div>
+            )}
 
             {showQaid && (
               <div style={{ marginTop:12 }}>
