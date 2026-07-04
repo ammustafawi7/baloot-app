@@ -347,7 +347,7 @@ export default function BalootApp() {
   function startMatch() {
     const { A1, A2, B1, B2 } = names;
     if (!A1 || !A2 || !B1 || !B2) return;
-    setActiveMatch({ teamA:[A1,A2], teamB:[B1,B2], cumA:0, cumB:0, rounds:[], winner:null, mode:matchMode });
+    setActiveMatch({ teamA:[A1,A2], teamB:[B1,B2], cumA:0, cumB:0, rounds:[], winner:null, mode:matchMode, turnIndex:0 });
     setView("play");
   }
 
@@ -581,7 +581,8 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     else if (nA >= MATCH_TARGET && nB >= MATCH_TARGET) { if (nA !== nB) newWinner = nA > nB ? "A" : "B"; }
     else if (nA >= MATCH_TARGET) newWinner = "A";
     else if (nB >= MATCH_TARGET) newWinner = "B";
-    const updated = { ...match, cumA:nA, cumB:nB, rounds:newRounds, winner:newWinner };
+    const nextTurn = ((match.turnIndex ?? 0) + 1) % 4;
+    const updated = { ...match, cumA:nA, cumB:nB, rounds:newRounds, winner:newWinner, turnIndex:nextTurn };
     setMatch(updated); resetForm();
     if (newWinner) onFinish(updated);
   }
@@ -614,6 +615,9 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
   const pctA = Math.min(100, (cumA / MATCH_TARGET) * 100);
   const pctB = Math.min(100, (cumB / MATCH_TARGET) * 100);
+  const ARROWS = ["↑", "←", "↓", "→"];
+  const turnIndex = match.turnIndex ?? 0;
+  function advanceTurn() { setMatch({ ...match, turnIndex: (turnIndex + 1) % 4 }); }
   const projTeamPlayers = projectTeam === "A" ? teamA : projectTeam === "B" ? teamB : [];
   const filteredProjects = PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly));
 
@@ -648,10 +652,18 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
         </div>
       )}
 
-      <div style={{ display:"flex", gap:10, marginBottom:14 }}>
+      <div style={{ display:"flex", gap:10, marginBottom:10 }}>
         {scoreCard(teamA, cumA, pctA, C.a)}
         {scoreCard(teamB, cumB, pctB, C.b)}
       </div>
+
+      {!winner && (
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>
+          <button onClick={advanceTurn} style={{ width:52, height:52, borderRadius:"50%", background:C.surface, border:`2px solid ${C.line}`, fontSize:26, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.07)", transition:"transform 0.15s" }}>
+            {ARROWS[turnIndex]}
+          </button>
+        </div>
+      )}
 
       {winner ? (
         <div className="card" style={{ textAlign:"center", background:C.a, border:"none" }}>
