@@ -518,6 +518,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const [showSwap,     setShowSwap]     = useState(false);
   const [swapOld,      setSwapOld]      = useState("");
   const [swapNew,      setSwapNew]      = useState("");
+  const [showQaid,     setShowQaid]     = useState(false);
   const [showGame,     setShowGame]     = useState(false);
   const [showKaboot,   setShowKaboot]   = useState(false);
   const [showBuyer,    setShowBuyer]    = useState(false);
@@ -526,7 +527,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   function resetForm() {
     setKabootTeam(null); setProjectTeam("none"); setProjectAssign({});
     setGenA(""); setGenB(""); setQaidPlayer(""); setBuyerPlayer(""); setError("");
-    setShowGame(false); setShowKaboot(false); setShowBuyer(false); setShowProjects(false);
+    setShowQaid(false); setShowGame(false); setShowKaboot(false); setShowBuyer(false); setShowProjects(false);
   }
 
   function adjustProjectAssign(projectKey, player, delta) {
@@ -664,34 +665,39 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
         </div>
       ) : (
         <>
-          {/* زر تم — تحت السكور مباشرة */}
-          {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
-          <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:12 }}>تم</button>
-
           <div className="card">
           <div style={{ display:"flex", gap:10, marginBottom:14 }}>
             <div style={{ flex:1 }}>
               <label>{teamA.join(" / ")}</label>
-              <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} />
+              <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)} style={{ fontSize:16 }} />
             </div>
             <div style={{ flex:1 }}>
               <label>{teamB.join(" / ")}</label>
-              <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} />
+              <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
             </div>
           </div>
 
-          <label className="bold-label">قيد</label>
-          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-            <button className={`pill ${!qaidPlayer?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
-            {allPlayers.map((p) => <button key={p} className={`pill ${qaidPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>)}
+          {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
+          <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:12 }}>تم</button>
+          {rounds.length > 0 && (
+            <button onClick={undoLastRound} className="pill pill-red" style={{ width:"100%" }}>تراجع</button>
+          )}
+
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:14, marginBottom:4 }}>
+            <button className={`pill ${showQaid    ?"pill-active":"pill-inactive"}`} onClick={() => setShowQaid(!showQaid)}>قيد {showQaid?"▲":"▼"}</button>
+            <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
+            <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
+            <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
+            <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
           </div>
 
-          {!qaidPlayer && (
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
-              <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
-              <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
-              <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
-              <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
+          {showQaid && (
+            <div style={{ marginTop:12, marginBottom:4 }}>
+              <label className="bold-label">قيد</label>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                <button className={`pill ${!qaidPlayer?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
+                {allPlayers.map((p) => <button key={p} className={`pill ${qaidPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>)}
+              </div>
             </div>
           )}
 
@@ -779,7 +785,6 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
               <span style={{ fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{r.A}–{r.B} <span style={{ color:C.line, fontWeight:400 }}>({r.cumA}–{r.cumB})</span></span>
             </div>
           ))}
-          <button onClick={undoLastRound} className="pill pill-red" style={{ marginTop:10, width:"100%" }}>تراجع عن آخر كوت</button>
         </div>
       )}
     </div>
