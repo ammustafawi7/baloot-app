@@ -417,26 +417,25 @@ export default function BalootApp() {
 // =====================================================================
 // Autocomplete Input
 // =====================================================================
-function AutoInput({ value, onChange, placeholder, suggestions }) {
+function AutoInput({ value, onChange, suggestions }) {
   const [open, setOpen] = useState(false);
-  const filtered = suggestions.filter((s) => s && s.includes(value) && s !== value);
+  const filtered = suggestions.filter((s) => s && s !== value && (value === "" || s.includes(value)));
 
   return (
     <div style={{ position:"relative" }}>
       <input
         type="text"
         value={value}
-        placeholder={placeholder}
         onChange={(e) => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}`, fontSize:14, width:"100%" }}
+        style={{ background:"#fff", borderRadius:11, border:`1px solid ${C.line}`, fontSize:16, width:"100%" }}
       />
       {open && filtered.length > 0 && (
-        <div style={{ position:"absolute", top:"100%", right:0, left:0, background:C.surface, border:`1px solid ${C.line}`, borderRadius:10, zIndex:50, boxShadow:"0 4px 12px rgba(0,0,0,0.1)", marginTop:2 }}>
-          {filtered.slice(0,5).map((s) => (
+        <div style={{ position:"absolute", bottom:"100%", right:0, left:0, background:C.surface, border:`1px solid ${C.line}`, borderRadius:10, zIndex:50, boxShadow:"0 -4px 12px rgba(0,0,0,0.1)", marginBottom:4, maxHeight:180, overflowY:"auto" }}>
+          {filtered.slice(0,6).map((s) => (
             <div key={s} onMouseDown={() => { onChange(s); setOpen(false); }}
-              style={{ padding:"9px 12px", fontSize:14, fontFamily:"'Cairo',sans-serif", cursor:"pointer", borderBottom:`1px solid ${C.line}` }}>
+              style={{ padding:"10px 12px", fontSize:14, fontFamily:"'Cairo',sans-serif", cursor:"pointer", borderBottom:`1px solid ${C.line}` }}>
               {s}
             </div>
           ))}
