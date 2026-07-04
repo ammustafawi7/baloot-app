@@ -682,11 +682,11 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           <div className="card">
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:15, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamA.join(" / ")}</label>
+                <label style={{ fontSize:12, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamA.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)}  style={{ fontSize:16 }} />
               </div>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:15, fontWeight:800, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamB.join(" / ")}</label>
+                <label style={{ fontSize:12, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block" }}>{teamB.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)}  style={{ fontSize:16 }} />
               </div>
             </div>
