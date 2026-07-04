@@ -365,6 +365,24 @@ export default function BalootApp() {
     setMatches(next); await saveMatches(next);
   }
 
+  async function mergeMatches(nameA, nameB, nameFinal) {
+    const rep = (n) => (n === nameA || n === nameB) ? nameFinal : n;
+    const updated = matches.map((m) => ({
+      ...m,
+      teamA: m.teamA.map(rep),
+      teamB: m.teamB.map(rep),
+      rounds: (m.rounds||[]).map((r) => ({
+        ...r,
+        label: r.label ? r.label.replace(nameA, nameFinal).replace(nameB, nameFinal) : r.label,
+        qaidPlayer:  r.qaidPlayer  ? rep(r.qaidPlayer)  : r.qaidPlayer,
+        buyerPlayer: r.buyerPlayer ? rep(r.buyerPlayer) : r.buyerPlayer,
+        projectDetails: r.projectDetails ? r.projectDetails.map((d) => ({ ...d, player: rep(d.player) })) : r.projectDetails,
+      })),
+    }));
+    setMatches(updated);
+    await saveMatches(updated);
+  }
+
   async function removeLastSavedMatch() {
     if (matches.length === 0) return;
     const next = matches.slice(0, -1);
@@ -397,7 +415,7 @@ export default function BalootApp() {
     if (view === "play") return activeMatch
       ? <PlayScreen match={activeMatch} setMatch={setActiveMatch} onFinish={finishMatch} onCancel={cancelMatch} onUndoFinish={removeLastSavedMatch} onNewMatch={() => { setActiveMatch(null); setView("setup"); }} />
       : <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيم جاري — ابدأ قيم جديد من اللعب</div>;
-    if (view === "stats")   return <StatsScreen stats={allTimeStats} matches={matches} setMatches={setMatches} />;
+    if (view === "stats")   return <StatsScreen stats={allTimeStats} players={Object.keys(allTimeStats)} onMerge={mergeMatches} />;
     if (view === "log")     return <LogScreen matches={matches} onDelete={deleteMatch} />;
     if (view === "archive") return <ArchiveScreen matches={matches} currentMonthKey={currentMonthKey} />;
   }
@@ -910,34 +928,28 @@ function CasualScreen({ casual, setCasual }) {
 // =====================================================================
 // Stats Screen
 // =====================================================================
-function StatsScreen({ stats, matches, setMatches }) {
-  const players = Object.keys(stats).sort((a,b) => stats[b].wins - stats[a].wins);
+function StatsScreen({ stats, players: allPlayers, onMerge }) {
+  const players = (allPlayers || Object.keys(stats)).sort((a,b) => (stats[b]?.wins||0) - (stats[a]?.wins||0));
   const [expanded,  setExpanded]  = useState(null);
   const [showMerge, setShowMerge] = useState(false);
   const [mergeA,    setMergeA]    = useState("");
   const [mergeB,    setMergeB]    = useState("");
   const [mergeFinal,setMergeFinal]= useState("");
   const [mergeMsg,  setMergeMsg]  = useState("");
+  const [merging,   setMerging]   = useState(false);
 
   async function doMerge() {
     if (!mergeA || !mergeB || !mergeFinal) { setMergeMsg("اختر الاسمين وأدخل الاسم النهائي"); return; }
     if (mergeA === mergeB) { setMergeMsg("الاسمان متطابقان"); return; }
-    const rep = (n) => (n === mergeA || n === mergeB) ? mergeFinal : n;
-    const updated = matches.map((m) => ({
-      ...m,
-      teamA: m.teamA.map(rep),
-      teamB: m.teamB.map(rep),
-      rounds: (m.rounds||[]).map((r) => ({
-        ...r,
-        qaidPlayer:  r.qaidPlayer  ? rep(r.qaidPlayer)  : r.qaidPlayer,
-        buyerPlayer: r.buyerPlayer ? rep(r.buyerPlayer) : r.buyerPlayer,
-        projectDetails: r.projectDetails ? r.projectDetails.map((d) => ({ ...d, player: rep(d.player) })) : r.projectDetails,
-      })),
-    }));
-    setMatches(updated);
-    await saveMatches(updated);
-    setMergeMsg(`تم دمج "${mergeA}" و "${mergeB}" تحت "${mergeFinal}"`);
-    setMergeA(""); setMergeB(""); setMergeFinal("");
+    setMerging(true);
+    try {
+      await onMerge(mergeA, mergeB, mergeFinal);
+      setMergeMsg(`✓ تم دمج "${mergeA}" و "${mergeB}" تحت "${mergeFinal}"`);
+      setMergeA(""); setMergeB(""); setMergeFinal("");
+    } catch(e) {
+      setMergeMsg("حدث خطأ، حاول مجدداً");
+    }
+    setMerging(false);
   }
 
   if (!players.length)
@@ -975,8 +987,8 @@ function StatsScreen({ stats, matches, setMatches }) {
           <input type="text" value={mergeFinal} onChange={(e) => setMergeFinal(e.target.value)}
             placeholder="اكتب الاسم اللي تبيه يبقى..."
             style={{ marginBottom:10 }} />
-          {mergeMsg && <div style={{ fontSize:13, color: mergeMsg.startsWith("تم") ? C.a : C.b, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>{mergeMsg}</div>}
-          <button onClick={doMerge} className="pill pill-active" style={{ width:"100%" }}>تأكيد الدمج</button>
+          {mergeMsg && <div style={{ fontSize:13, color: mergeMsg.startsWith("✓") ? C.a : C.b, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>{mergeMsg}</div>}
+          <button onClick={doMerge} disabled={merging} className="pill pill-active" style={{ width:"100%", opacity: merging ? 0.6 : 1 }}>{merging ? "جاري الدمج..." : "تأكيد الدمج"}</button>
         </div>
       )}
       {players.map((name) => {
