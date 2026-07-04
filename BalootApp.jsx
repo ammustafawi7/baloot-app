@@ -624,7 +624,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
   const scoreCard = (team, cum, pct, bg) => (
     <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff", textAlign:"center" }}>
-      <div style={{ fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", marginBottom:4, opacity:0.8 }}>{team.join(" / ")}</div>
+      <div style={{ fontSize:14, fontWeight:700, fontFamily:"'Cairo',sans-serif", marginBottom:4, opacity:0.9 }}>{team.join(" / ")}</div>
       <div style={{ fontSize:36, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
       <div className="progress-track"><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
     </div>
@@ -682,11 +682,11 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
           <div className="card">
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:12, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
+                <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)}  style={{ fontSize:16 }} />
               </div>
               <div style={{ flex:1 }}>
-                <label style={{ fontSize:12, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
+                <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)}  style={{ fontSize:16 }} />
               </div>
             </div>
