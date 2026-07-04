@@ -623,7 +623,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const filteredProjects = PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly));
 
   const scoreCard = (team, cum, pct, bg) => (
-    <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff", textAlign:"center" }}>
+    <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff" }}>
       <div style={{ fontSize:14, fontWeight:700, fontFamily:"'Cairo',sans-serif", marginBottom:4, opacity:0.9 }}>{team.join(" / ")}</div>
       <div style={{ fontSize:36, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{cum}</div>
       <div className="progress-track"><div className="progress-fill" style={{ width:`${pct}%` }} /></div>
