@@ -550,6 +550,13 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     el.addEventListener("input", handler);
     return () => el.removeEventListener("input", handler);
   }, []);
+  React.useEffect(() => {
+    const el = genBRef.current;
+    if (!el) return;
+    const handler = () => { if (el.value.length >= 2) genARef.current?.focus(); };
+    el.addEventListener("input", handler);
+    return () => el.removeEventListener("input", handler);
+  }, []);
 
   function resetForm() {
     setGenA(""); setGenB(""); setQaidPlayer(""); setShowQaidDrop(false); setError("");
@@ -676,7 +683,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
               </div>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
-                <input ref={genBRef} type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:22 }} />
+                <input ref={genBRef} type="text" inputMode="numeric" maxLength={2} value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:22 }} />
               </div>
             </div>
 
