@@ -546,7 +546,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   React.useEffect(() => {
     const el = genARef.current;
     if (!el) return;
-    const handler = () => { if (el.value.replace(/\D/g,"").length === 2) { el.blur(); genBRef.current?.focus(); } };
+    const handler = () => { if (el.value.length >= 2) genBRef.current?.focus(); };
     el.addEventListener("input", handler);
     return () => el.removeEventListener("input", handler);
   }, []);
@@ -670,7 +670,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
-                <input ref={genARef} type="text" inputMode="numeric" value={genA}
+                <input ref={genARef} type="text" inputMode="numeric" maxLength={2} value={genA}
                   onChange={(e) => setGenA(e.target.value)}
                   style={{ fontSize:22 }} />
               </div>
