@@ -139,8 +139,8 @@ function computeTitles(stats) {
   const names = Object.keys(stats).filter((n) => stats[n].ranked >= MIN_RANKED_FOR_TITLE);
   function topBy(field, criteriaLabel) {
     let best = null, bestVal = -1;
-    for (const n of names) { const v = stats[n][field]; if (v > bestVal) { bestVal = v; best = n; } }
-    return bestVal > 0 ? { name: best, value: bestVal, criteriaLabel } : null;
+    for (const n of names) { const v = stats[n][field]; if (v > bestVal) { bestVal = v; best = n; } else if (v === bestVal && bestVal > 0) { best = null; } }
+    return bestVal > 0 && best ? { name: best, value: bestVal, criteriaLabel } : null;
   }
   return {
     ghashash: topBy("qaid",   "مرة تسبب بقيد"),
@@ -663,12 +663,12 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genA}
-                  onChange={(e) => { setGenA(e.target.value); if (e.target.value.replace(/\D/g,"").length === 2) genBRef.current?.focus(); }}
-                  style={{ fontSize:16 }} />
+                  onChange={(e) => { setGenA(e.target.value); if (e.target.value.replace(/\D/g,"").length === 2) setTimeout(() => genBRef.current?.focus(), 0); }}
+                  style={{ fontSize:22 }} />
               </div>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
-                <input ref={genBRef} type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
+                <input ref={genBRef} type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:22 }} />
               </div>
             </div>
 
