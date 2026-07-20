@@ -533,70 +533,26 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const { teamA, teamB, cumA, cumB, rounds, winner, mode } = match;
   const allPlayers = [...teamA, ...teamB];
 
-  const [game,         setGame]         = useState("sun");
-  const [buyerPlayer,  setBuyerPlayer]  = useState("");
-  const [kabootTeam,   setKabootTeam]   = useState(null);
-  const [projectTeam,  setProjectTeam]  = useState("none");
-  const [projectAssign,setProjectAssign]= useState({});
   const [genA,         setGenA]         = useState("");
   const [genB,         setGenB]         = useState("");
   const [qaidPlayer,   setQaidPlayer]   = useState("");
+  const [showQaidDrop, setShowQaidDrop] = useState(false);
   const [error,        setError]        = useState("");
   const [showSwap,     setShowSwap]     = useState(false);
   const [swapOld,      setSwapOld]      = useState("");
   const [swapNew,      setSwapNew]      = useState("");
-  const [showQaid,     setShowQaid]     = useState(false);
-  const [showGame,     setShowGame]     = useState(false);
-  const [showKaboot,   setShowKaboot]   = useState(false);
-  const [showBuyer,    setShowBuyer]    = useState(false);
-  const [showProjects, setShowProjects] = useState(false);
+  const genBRef = React.useRef(null);
 
   function resetForm() {
-    setKabootTeam(null); setProjectTeam("none"); setProjectAssign({});
-    setGenA(""); setGenB(""); setQaidPlayer(""); setBuyerPlayer(""); setError("");
-    setShowQaid(false); setShowGame(false); setShowKaboot(false); setShowBuyer(false); setShowProjects(false);
-  }
-
-  function adjustProjectAssign(projectKey, player, delta) {
-    setProjectAssign((prev) => {
-      const pc = { ...(prev[projectKey] || {}) };
-      const next = Math.max(0, (pc[player] || 0) + delta);
-      if (next === 0) delete pc[player]; else pc[player] = next;
-      return { ...prev, [projectKey]: pc };
-    });
-  }
-
-  function projectsBreakdown() {
-    let total = 0; const details = [];
-    for (const key of Object.keys(projectAssign)) {
-      const proj = PROJECTS.find((p) => p.key === key);
-      for (const player of Object.keys(projectAssign[key] || {})) {
-        const count = projectAssign[key][player]; if (!count) continue;
-        total += (game === "sun" ? proj.sun : proj.hokom) * count;
-        details.push({ key, player, count });
-      }
-    }
-    return { all: total, details };
+    setGenA(""); setGenB(""); setQaidPlayer(""); setShowQaidDrop(false); setError("");
   }
 
   function computeRound() {
     setError("");
-    const { details } = projectsBreakdown();
-    if (qaidPlayer) {
-      const a = toInt(genA), b = toInt(genB);
-      if (isNaN(a) || isNaN(b)) { setError("أدخل رقمين صحيحين"); return null; }
-      return { label:"قيد", A:a, B:b, qaidPlayer };
-    }
     const a = toInt(genA), b = toInt(genB);
     if (isNaN(a) || isNaN(b)) { setError("أدخل رقمين صحيحين"); return null; }
-    const kabootLabel = kabootTeam ? `كبوت (${kabootTeam === "A" ? teamA.join(" / ") : teamB.join(" / ")})` : null;
-    return {
-      label: kabootLabel || (buyerPlayer ? `${game === "sun" ? "صن" : "حكم"}-${buyerPlayer}` : "كوت"),
-      A:a, B:b,
-      buyerPlayer: buyerPlayer || null,
-      game: buyerPlayer ? game : null,
-      projectDetails: projectTeam !== "none" && details.length > 0 ? details : null,
-    };
+    if (qaidPlayer) return { label:"قيد", A:a, B:b, qaidPlayer };
+    return { label:"كوت", A:a, B:b };
   }
 
   function addRound() {
@@ -633,9 +589,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     const rep = (arr) => arr.map((n) => (n === swapOld ? swapNew : n));
     const newRounds = rounds.map((r) => ({
       ...r,
-      qaidPlayer:  r.qaidPlayer  === swapOld ? swapNew : r.qaidPlayer,
-      buyerPlayer: r.buyerPlayer === swapOld ? swapNew : r.buyerPlayer,
-      projectDetails: r.projectDetails ? r.projectDetails.map((d) => d.player === swapOld ? {...d,player:swapNew} : d) : r.projectDetails,
+      qaidPlayer: r.qaidPlayer === swapOld ? swapNew : r.qaidPlayer,
     }));
     setMatch({ ...match, teamA:rep(teamA), teamB:rep(teamB), rounds:newRounds });
     setShowSwap(false); setSwapOld(""); setSwapNew("");
@@ -646,8 +600,6 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const ARROWS = ["↑", "←", "↓", "→"];
   const turnIndex = match.turnIndex ?? 0;
   function advanceTurn() { setMatch({ ...match, turnIndex: (turnIndex + 1) % 4 }); }
-  const projTeamPlayers = projectTeam === "A" ? teamA : projectTeam === "B" ? teamB : [];
-  const filteredProjects = PROJECTS.filter((p) => (game === "sun" ? !p.hokomOnly : !p.sunOnly));
 
   const scoreCard = (team, cum, pct, bg) => (
     <div style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff", textAlign:"center" }}>
@@ -705,113 +657,54 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
         </div>
       ) : (
         <>
-          {/* كارد ١: إدخال الأرقام + تم/تراجع */}
+          {/* كارد: إدخال الأرقام + تم + تراجع/قيد */}
           <div className="card">
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
-                <input type="text" inputMode="numeric" value={genA} onChange={(e) => setGenA(e.target.value)}  style={{ fontSize:16 }} />
+                <input type="text" inputMode="numeric" value={genA}
+                  onChange={(e) => { setGenA(e.target.value); if (e.target.value.replace(/\D/g,"").length === 2) genBRef.current?.focus(); }}
+                  style={{ fontSize:16 }} />
               </div>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
-                <input type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)}  style={{ fontSize:16 }} />
+                <input ref={genBRef} type="text" inputMode="numeric" value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:16 }} />
               </div>
             </div>
 
             {error && <div style={{ color:C.b, fontSize:13, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>⚠ {error}</div>}
-            <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom: rounds.length > 0 ? 10 : 0 }}>تم</button>
-            {rounds.length > 0 && (
-              <button onClick={undoLastRound} className="pill pill-red" style={{ width:"100%" }}>تراجع</button>
-            )}
-          </div>
+            <button onClick={addRound} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, fontSize:15, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:10 }}>تم</button>
 
-          {/* كارد ٢: صن/حكم toggle + كبوت + الشراي + قيد + مشاريع */}
-          <div className="card">
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:4 }}>
-              <button className={`pill ${showGame    ?"pill-active":"pill-inactive"}`} onClick={() => setShowGame(!showGame)}>صن/حكم {showGame?"▲":"▼"}</button>
-              <button className={`pill ${showKaboot  ?"pill-active":"pill-inactive"}`} onClick={() => setShowKaboot(!showKaboot)}>كبوت {showKaboot?"▲":"▼"}</button>
-              <button className={`pill ${showBuyer   ?"pill-active":"pill-inactive"}`} onClick={() => setShowBuyer(!showBuyer)}>الشراي {showBuyer?"▲":"▼"}</button>
-              <button className={`pill ${showQaid    ?"pill-active":"pill-inactive"}`} onClick={() => setShowQaid(!showQaid)}>قيد {showQaid?"▲":"▼"}</button>
-              <button className={`pill ${showProjects?"pill-active":"pill-inactive"}`} onClick={() => setShowProjects(!showProjects)}>مشاريع {showProjects?"▲":"▼"}</button>
-            </div>
-
-            {showGame && (
-              <div style={{ marginTop:12, display:"flex", gap:8 }}>
-                <button className={`pill ${game==="sun"  ?"pill-active":"pill-inactive"}`} onClick={() => setGame("sun")}>صن</button>
-                <button className={`pill ${game==="hokom"?"pill-active":"pill-inactive"}`} onClick={() => setGame("hokom")}>حكم</button>
+            <div style={{ display:"flex", gap:10 }}>
+              {/* تراجع */}
+              <div style={{ flex:1, background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:10 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:C.inkSoft, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>تراجع</div>
+                <button onClick={undoLastRound} disabled={rounds.length === 0}
+                  style={{ width:"100%", background:"none", border:`1.5px solid ${C.line}`, borderRadius:10, padding:"9px 0", fontSize:13, fontWeight:700, color: rounds.length > 0 ? C.inkSoft : C.line, fontFamily:"'Cairo',sans-serif", cursor: rounds.length > 0 ? "pointer" : "default" }}>
+                  ↩ تراجع
+                </button>
               </div>
-            )}
 
-            {showQaid && (
-              <div style={{ marginTop:12 }}>
-                <label className="bold-label">قيد</label>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                  <button className={`pill ${!qaidPlayer?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer("")}>لا</button>
-                  {allPlayers.map((p) => <button key={p} className={`pill ${qaidPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setQaidPlayer(p)}>{p}</button>)}
-                </div>
-              </div>
-            )}
-
-            {!qaidPlayer && showKaboot && (
-              <div style={{ marginTop:12 }}>
-                <label className="bold-label">كبوت</label>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                  <button className={`pill ${kabootTeam===null?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam(null)}>لا</button>
-                  <button className={`pill ${kabootTeam==="A" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("A")}>{teamA.join(" / ")}</button>
-                  <button className={`pill ${kabootTeam==="B" ?"pill-active":"pill-inactive"}`} onClick={() => setKabootTeam("B")}>{teamB.join(" / ")}</button>
-                </div>
-              </div>
-            )}
-
-            {!qaidPlayer && showBuyer && (
-              <div style={{ marginTop:12 }}>
-                <label className="bold-label">الشراي</label>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                  <button className={`pill ${!buyerPlayer?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer("")}>بدون</button>
-                  {allPlayers.map((p) => <button key={p} className={`pill ${buyerPlayer===p?"pill-active":"pill-inactive"}`} onClick={() => setBuyerPlayer(p)}>{p}</button>)}
-                </div>
-              </div>
-            )}
-
-            {!qaidPlayer && showProjects && (
-              <div style={{ marginTop:12 }}>
-                <label className="bold-label">مشاريع</label>
-                <div style={{ display:"flex", gap:6, marginBottom:10 }}>
-                  <button className={`pill ${projectTeam==="none"?"pill-active":"pill-inactive"}`} onClick={() => { setProjectTeam("none"); setProjectAssign({}); }}>بدون</button>
-                  <button className={`pill ${projectTeam==="A"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("A")}>{teamA.join(" / ")}</button>
-                  <button className={`pill ${projectTeam==="B"   ?"pill-active":"pill-inactive"}`} onClick={() => setProjectTeam("B")}>{teamB.join(" / ")}</button>
-                </div>
-                {projectTeam !== "none" && (
-                  <div style={{ background:C.bg, borderRadius:10, border:`1px solid ${C.line}`, overflow:"hidden" }}>
-                    <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
-                      <div style={{ minWidth: filteredProjects.length * 80 + 90, padding:"10px 12px" }}>
-                        <div style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, marginBottom:8 }}>
-                          <span />
-                          {filteredProjects.map((p) => (
-                            <span key={p.key} style={{ fontSize:12, textAlign:"center", fontWeight:700, fontFamily:"'Cairo',sans-serif", color:C.inkSoft }}>{p.label}</span>
-                          ))}
-                        </div>
-                        {projTeamPlayers.map((pl) => (
-                          <div key={pl} style={{ display:"grid", gridTemplateColumns:`90px ${filteredProjects.map(() => "80px").join(" ")}`, gap:4, alignItems:"center", marginBottom:6 }}>
-                            <span style={{ fontSize:13, fontFamily:"'Cairo',sans-serif", fontWeight:600, color:C.ink }}>{pl}</span>
-                            {filteredProjects.map((p) => {
-                              const count = (projectAssign[p.key]?.[pl]) || 0;
-                              return (
-                                <div key={p.key} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:3 }}>
-                                  <button onClick={() => adjustProjectAssign(p.key, pl, -1)} style={{ background:C.b, color:"#fff", border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
-                                  <span style={{ minWidth:14, textAlign:"center", fontSize:13, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{count}</span>
-                                  <button onClick={() => adjustProjectAssign(p.key, pl,  1)} style={{ background:C.gold, border:"none", borderRadius:6, width:20, height:20, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>+</button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))}
+              {/* قيد */}
+              <div style={{ flex:1, background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:10, position:"relative" }}>
+                <div style={{ fontSize:12, fontWeight:700, color:C.inkSoft, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>قيد</div>
+                <button onClick={() => setShowQaidDrop(!showQaidDrop)}
+                  style={{ width:"100%", background: qaidPlayer ? C.a : C.aSoft, border:`1.5px solid ${qaidPlayer ? C.a : C.line}`, borderRadius:10, padding:"9px 12px", fontSize:13, fontWeight:700, color: qaidPlayer ? "#fff" : C.a, fontFamily:"'Cairo',sans-serif", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}>
+                  <span>{qaidPlayer || "قيد"}</span>
+                  <span style={{ fontSize:10 }}>{showQaidDrop ? "▲" : "▼"}</span>
+                </button>
+                {showQaidDrop && (
+                  <div style={{ position:"absolute", bottom:"calc(100% + 6px)", right:0, left:0, background:C.surface, border:`1px solid ${C.line}`, borderRadius:12, overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,0.10)", zIndex:10 }}>
+                    {allPlayers.map((p, i) => (
+                      <div key={p} onClick={() => { setQaidPlayer(qaidPlayer === p ? "" : p); setShowQaidDrop(false); }}
+                        style={{ padding:"11px 14px", fontSize:14, fontWeight:700, color: qaidPlayer === p ? C.a : C.ink, background: qaidPlayer === p ? C.aSoft : "transparent", fontFamily:"'Cairo',sans-serif", borderBottom: i < allPlayers.length - 1 ? `1px solid ${C.line}` : "none", cursor:"pointer" }}>
+                        {p}
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </>
       )}
