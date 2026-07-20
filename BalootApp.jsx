@@ -53,7 +53,7 @@ const TITLES = {
 };
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDN9b5YojbAoIja22eVJXF1maeyxzwLPLY",
@@ -65,16 +65,32 @@ const firebaseConfig = {
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-const MATCHES_DOC = doc(db, "baloot", "matches");
+const MATCHES_COL = collection(db, "matches");
+const OLD_MATCHES_DOC = doc(db, "baloot", "matches");
 
 async function loadMatches() {
-  try { const s = await getDoc(MATCHES_DOC); if (s.exists()) return s.data().list || []; }
-  catch (e) { console.error("Firestore load failed", e); }
-  return [];
+  try {
+    const snap = await getDocs(query(MATCHES_COL, orderBy("date", "asc")));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) { console.error("Firestore load failed", e); return []; }
 }
-async function saveMatches(matches) {
-  try { await setDoc(MATCHES_DOC, { list: matches }); }
-  catch (e) { console.error("Firestore save failed", e); }
+async function saveNewMatch(matchData) {
+  try { const ref = await addDoc(MATCHES_COL, matchData); return ref.id; }
+  catch (e) { console.error("Firestore save failed", e); return null; }
+}
+async function deleteMatchById(id) {
+  try { await deleteDoc(doc(db, "matches", id)); }
+  catch (e) { console.error("Firestore delete failed", e); }
+}
+async function runMigration() {
+  try {
+    const old = await getDoc(OLD_MATCHES_DOC);
+    if (!old.exists()) return true;
+    const list = old.data().list || [];
+    for (const m of list) await addDoc(MATCHES_COL, m);
+    await deleteDoc(OLD_MATCHES_DOC);
+    return true;
+  } catch (e) { console.error("Migration failed", e); return false; }
 }
 
 function monthKey(dateStr) {
@@ -329,7 +345,16 @@ export default function BalootApp() {
   const [activeMatch, setActiveMatch] = useState(() => loadLocal("baloot_active_match", null));
   const [casual,      setCasual]      = useState(() => loadLocal("baloot_casual", { us:0, them:0, history:[] }));
 
-  useEffect(() => { loadMatches().then((m) => { setMatches(m); setLoading(false); }); }, []);
+  useEffect(() => {
+    if (!loadLocal("baloot_migrated_v2", false)) {
+      runMigration().then((ok) => {
+        if (ok) saveLocal("baloot_migrated_v2", true);
+        loadMatches().then((m) => { setMatches(m); setLoading(false); });
+      });
+    } else {
+      loadMatches().then((m) => { setMatches(m); setLoading(false); });
+    }
+  }, []);
   useEffect(() => { saveLocal("baloot_active_match", activeMatch); }, [activeMatch]);
   useEffect(() => { saveLocal("baloot_casual",       casual);      }, [casual]);
   useEffect(() => { saveLocal("baloot_view",         view);        }, [view]);
@@ -343,22 +368,24 @@ export default function BalootApp() {
 
   async function finishMatch(updated) {
     if (updated.winner) {
-      const next = [...matches, { date:new Date().toISOString(), mode:updated.mode, teamA:updated.teamA, teamB:updated.teamB, winningTeam:updated.winner, finalA:updated.cumA, finalB:updated.cumB, rounds:updated.rounds }];
-      setMatches(next); await saveMatches(next);
+      const matchData = { date:new Date().toISOString(), mode:updated.mode, teamA:updated.teamA, teamB:updated.teamB, winningTeam:updated.winner, finalA:updated.cumA, finalB:updated.cumB, rounds:updated.rounds };
+      const newId = await saveNewMatch(matchData);
+      setMatches((prev) => [...prev, { id:newId, ...matchData }]);
     }
   }
 
   function cancelMatch() { setActiveMatch(null); setView("setup"); }
 
-  async function deleteMatch(date) {
-    const next = matches.filter((m) => m.date !== date);
-    setMatches(next); await saveMatches(next);
+  async function deleteMatch(matchId) {
+    await deleteMatchById(matchId);
+    setMatches((prev) => prev.filter((m) => m.id !== matchId));
   }
 
   async function removeLastSavedMatch() {
     if (matches.length === 0) return;
-    const next = matches.slice(0, -1);
-    setMatches(next); await saveMatches(next);
+    const last = matches[matches.length - 1];
+    if (last?.id) await deleteMatchById(last.id);
+    setMatches((prev) => prev.slice(0, -1));
   }
 
   const now = new Date();
@@ -907,12 +934,12 @@ function LogScreen({ matches, onDelete }) {
                 <span className="badge" style={{ background:m.mode==="ranked"?C.gold:C.inkSoft }}>{m.mode==="ranked"?"رسمي":"ودي"}</span>
               </div>
             </div>
-            <button onClick={() => { setPwTarget(m.date); setPwInput(""); setPwError(""); }}
+            <button onClick={() => { setPwTarget(m.id); setPwInput(""); setPwError(""); }}
               style={{ background:C.bSoft, color:C.b, border:`1px solid ${C.b}30`, borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:700, whiteSpace:"nowrap", fontFamily:"'Cairo',sans-serif" }}>
               حذف
             </button>
           </div>
-          {pwTarget === m.date && (
+          {pwTarget === m.id && (
             <div style={{ marginTop:10, background:C.bg, borderRadius:10, padding:12, border:`1px solid ${C.line}` }}>
               <label>كلمة مرور الحذف</label>
               <input type="password" value={pwInput} onChange={(e) => setPwInput(e.target.value)} style={{ marginBottom:8 }} />
