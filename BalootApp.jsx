@@ -543,23 +543,20 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const [swapNew,      setSwapNew]      = useState("");
   const genARef = React.useRef(null);
   const genBRef = React.useRef(null);
+  const didTransfer = React.useRef(false);
   React.useEffect(() => {
-    const el = genARef.current;
-    if (!el) return;
-    const handler = () => { if (el.value.length >= 2) genBRef.current?.focus(); };
-    el.addEventListener("input", handler);
-    return () => el.removeEventListener("input", handler);
-  }, []);
-  React.useEffect(() => {
-    const el = genBRef.current;
-    if (!el) return;
-    const handler = () => { if (el.value.length >= 2) genARef.current?.focus(); };
-    el.addEventListener("input", handler);
-    return () => el.removeEventListener("input", handler);
+    const elA = genARef.current, elB = genBRef.current;
+    if (!elA || !elB) return;
+    const hA = () => { if (!didTransfer.current && elA.value.length >= 2) { didTransfer.current = true; elB.focus(); } };
+    const hB = () => { if (!didTransfer.current && elB.value.length >= 2) { didTransfer.current = true; elA.focus(); } };
+    elA.addEventListener("input", hA);
+    elB.addEventListener("input", hB);
+    return () => { elA.removeEventListener("input", hA); elB.removeEventListener("input", hB); };
   }, []);
 
   function resetForm() {
     setGenA(""); setGenB(""); setQaidPlayer(""); setShowQaidDrop(false); setError("");
+    didTransfer.current = false;
   }
 
   function computeRound() {
