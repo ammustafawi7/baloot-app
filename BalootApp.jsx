@@ -686,7 +686,6 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             <div style={{ display:"flex", gap:10 }}>
               {/* تراجع */}
               <div style={{ flex:1, background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:10 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:C.inkSoft, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>تراجع</div>
                 <button onClick={undoLastRound} disabled={rounds.length === 0}
                   style={{ width:"100%", background:"none", border:`1.5px solid ${C.line}`, borderRadius:10, padding:"9px 0", fontSize:13, fontWeight:700, color: rounds.length > 0 ? C.inkSoft : C.line, fontFamily:"'Cairo',sans-serif", cursor: rounds.length > 0 ? "pointer" : "default" }}>
                   ↩ تراجع
@@ -695,7 +694,6 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 
               {/* قيد */}
               <div style={{ flex:1, background:C.bg, borderRadius:12, border:`1px solid ${C.line}`, padding:10, position:"relative" }}>
-                <div style={{ fontSize:12, fontWeight:700, color:C.inkSoft, marginBottom:8, fontFamily:"'Cairo',sans-serif" }}>قيد</div>
                 <button onClick={() => setShowQaidDrop(!showQaidDrop)}
                   style={{ width:"100%", background: qaidPlayer ? C.a : C.aSoft, border:`1.5px solid ${qaidPlayer ? C.a : C.line}`, borderRadius:10, padding:"9px 12px", fontSize:13, fontWeight:700, color: qaidPlayer ? "#fff" : C.a, fontFamily:"'Cairo',sans-serif", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}>
                   <span>{qaidPlayer || "قيد"}</span>
