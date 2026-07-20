@@ -541,7 +541,15 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   const [showSwap,     setShowSwap]     = useState(false);
   const [swapOld,      setSwapOld]      = useState("");
   const [swapNew,      setSwapNew]      = useState("");
+  const genARef = React.useRef(null);
   const genBRef = React.useRef(null);
+  React.useEffect(() => {
+    const el = genARef.current;
+    if (!el) return;
+    const handler = () => { if (el.value.replace(/\D/g,"").length === 2) genBRef.current?.focus(); };
+    el.addEventListener("input", handler);
+    return () => el.removeEventListener("input", handler);
+  }, []);
 
   function resetForm() {
     setGenA(""); setGenB(""); setQaidPlayer(""); setShowQaidDrop(false); setError("");
@@ -662,8 +670,8 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
-                <input type="text" inputMode="numeric" value={genA}
-                  onChange={(e) => { const v = e.target.value; setGenA(v); if (v.replace(/\D/g,"").length === 2) genBRef.current?.focus(); }}
+                <input ref={genARef} type="text" inputMode="numeric" value={genA}
+                  onChange={(e) => setGenA(e.target.value)}
                   style={{ fontSize:22 }} />
               </div>
               <div style={{ flex:1 }}>
