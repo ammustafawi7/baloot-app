@@ -663,7 +663,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
                 <input type="text" inputMode="numeric" value={genA}
-                  onChange={(e) => { setGenA(e.target.value); if (e.target.value.replace(/\D/g,"").length === 2) setTimeout(() => genBRef.current?.focus(), 0); }}
+                  onChange={(e) => { const v = e.target.value; setGenA(v); if (v.replace(/\D/g,"").length === 2) genBRef.current?.focus(); }}
                   style={{ fontSize:22 }} />
               </div>
               <div style={{ flex:1 }}>
