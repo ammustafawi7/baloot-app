@@ -546,7 +546,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
   React.useEffect(() => {
     const el = genARef.current;
     if (!el) return;
-    const handler = () => { if (el.value.replace(/\D/g,"").length === 2) genBRef.current?.focus(); };
+    const handler = () => { if (el.value.replace(/\D/g,"").length === 2) { el.blur(); genBRef.current?.focus(); } };
     el.addEventListener("input", handler);
     return () => el.removeEventListener("input", handler);
   }, []);
