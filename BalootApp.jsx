@@ -677,13 +677,13 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
             <div style={{ display:"flex", gap:10, marginBottom:14 }}>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamA.join(" / ")}</label>
-                <input ref={genARef} type="text" inputMode="numeric" maxLength={2} value={genA}
+                <input ref={genARef} type="text" inputMode="numeric" maxLength={3} value={genA}
                   onChange={(e) => setGenA(e.target.value)}
                   style={{ fontSize:22 }} />
               </div>
               <div style={{ flex:1 }}>
                 <label style={{ fontSize:15, fontWeight:700, color:C.ink, fontFamily:"'Cairo',sans-serif", marginBottom:6, display:"block", textAlign:"center" }}>{teamB.join(" / ")}</label>
-                <input ref={genBRef} type="text" inputMode="numeric" maxLength={2} value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:22 }} />
+                <input ref={genBRef} type="text" inputMode="numeric" maxLength={3} value={genB} onChange={(e) => setGenB(e.target.value)} style={{ fontSize:22 }} />
               </div>
             </div>
 
