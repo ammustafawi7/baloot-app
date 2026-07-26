@@ -445,7 +445,7 @@ export default function BalootApp() {
     if (view === "play") return activeMatch
       ? <PlayScreen match={activeMatch} setMatch={setActiveMatch} onFinish={finishMatch} onCancel={cancelMatch} onUndoFinish={removeLastSavedMatch} onNewMatch={() => { setActiveMatch(null); setView("setup"); }} />
       : <div className="card" style={{ textAlign:"center", color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>ما في قيم جاري — ابدأ قيم جديد من اللعب</div>;
-    if (view === "stats")   return <StatsScreen stats={allTimeStats} />;
+    if (view === "stats")   return <StatsScreen stats={computeStats(currentMonthMatches)} />;
     if (view === "log")     return <LogScreen matches={matches} onDelete={deleteMatch} />;
     if (view === "archive") return <ArchiveScreen matches={matches} currentMonthKey={currentMonthKey} />;
   }
