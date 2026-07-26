@@ -619,7 +619,8 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     if (nA >= MATCH_TARGET && nB >= MATCH_TARGET) { if (nA !== nB) newWinner = nA > nB ? "A" : "B"; }
     else if (nA >= MATCH_TARGET) newWinner = "A";
     else if (nB >= MATCH_TARGET) newWinner = "B";
-    setMatch({ ...match, cumA:nA, cumB:nB, rounds:newRounds, winner:newWinner });
+    const prevTurn = ((match.turnIndex ?? 0) + 3) % 4;
+    setMatch({ ...match, cumA:nA, cumB:nB, rounds:newRounds, winner:newWinner, turnIndex:prevTurn });
     if (wasFinished) onUndoFinish();
   }
 
