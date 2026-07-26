@@ -169,7 +169,7 @@ function computeTitles(stats) {
       if (rate > bestRate) { bestRate = rate; best = n; }
       else if (rate === bestRate) { best = null; }
     }
-    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "% نسبة فوز (Top 3)" } : null;
+    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "الأكثر فوزاً" } : null;
   }
   function bestLossRate() {
     const top3 = names.slice().sort((a,b) => stats[b].losses - stats[a].losses).slice(0,3);
@@ -182,10 +182,10 @@ function computeTitles(stats) {
       if (rate > bestRate) { bestRate = rate; best = n; }
       else if (rate === bestRate) { best = null; }
     }
-    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "% نسبة خسارة (Top 3)" } : null;
+    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "الأكثر خسارةً" } : null;
   }
   return {
-    ghashash: topBy("qaid",   "مرة تسبب بقيد"),
+    ghashash: topBy("qaid",   "الأكثر تسبباً بقيد"),
     ustora:   bestWinRate(),
     baidh:    bestLossRate(),
   };
