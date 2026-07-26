@@ -171,10 +171,23 @@ function computeTitles(stats) {
     }
     return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "% نسبة فوز (Top 3)" } : null;
   }
+  function bestLossRate() {
+    const top3 = names.slice().sort((a,b) => stats[b].losses - stats[a].losses).slice(0,3);
+    if (top3.length === 0) return null;
+    let best = null, bestRate = -1;
+    for (const n of top3) {
+      const s = stats[n];
+      const total = s.wins + s.losses;
+      const rate = total > 0 ? s.losses / total : 0;
+      if (rate > bestRate) { bestRate = rate; best = n; }
+      else if (rate === bestRate) { best = null; }
+    }
+    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "% نسبة خسارة (Top 3)" } : null;
+  }
   return {
     ghashash: topBy("qaid",   "مرة تسبب بقيد"),
     ustora:   bestWinRate(),
-    baidh:    topBy("losses", "خسارة"),
+    baidh:    bestLossRate(),
   };
 }
 
