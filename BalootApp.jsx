@@ -524,7 +524,7 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles,
           </div>
           {activeTip && (
             <div ref={tipRef} style={{ marginTop:10, background:C.goldSoft, border:`1px solid ${C.gold}44`, borderRadius:12, padding:"10px 14px", fontSize:13, color:"#7A5500", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}>
-              <span style={{ fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{activeTip.name}</span> حاز لقب <span style={{ fontWeight:700 }}>{TITLES[tipKey]}</span> بسبب {activeTip.value} {activeTip.criteriaLabel}
+              <span style={{ fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{activeTip.name}</span> — {activeTip.criteriaLabel}
             </div>
           )}
         </div>
