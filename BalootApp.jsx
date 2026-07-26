@@ -158,9 +158,22 @@ function computeTitles(stats) {
     for (const n of names) { const v = stats[n][field]; if (v > bestVal) { bestVal = v; best = n; } else if (v === bestVal && bestVal > 0) { best = null; } }
     return bestVal > 0 && best ? { name: best, value: bestVal, criteriaLabel } : null;
   }
+  function bestWinRate() {
+    const top3 = names.slice().sort((a,b) => stats[b].wins - stats[a].wins).slice(0,3);
+    if (top3.length === 0) return null;
+    let best = null, bestRate = -1;
+    for (const n of top3) {
+      const s = stats[n];
+      const total = s.wins + s.losses;
+      const rate = total > 0 ? s.wins / total : 0;
+      if (rate > bestRate) { bestRate = rate; best = n; }
+      else if (rate === bestRate) { best = null; }
+    }
+    return best ? { name: best, value: Math.round(bestRate * 100), criteriaLabel: "% نسبة فوز (Top 3)" } : null;
+  }
   return {
     ghashash: topBy("qaid",   "مرة تسبب بقيد"),
-    ustora:   topBy("wins",   "فوز"),
+    ustora:   bestWinRate(),
     baidh:    topBy("losses", "خسارة"),
   };
 }
