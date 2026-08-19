@@ -367,9 +367,7 @@ export default function BalootApp() {
   const [matches,     setMatches]     = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [names,       setNames]       = useState({ A1:"", A2:"", B1:"", B2:"" });
-  const [matchMode,   setMatchMode]   = useState("ranked");
   const [activeMatch, setActiveMatch] = useState(() => loadLocal("baloot_active_match", null));
-  const [casual,      setCasual]      = useState(() => loadLocal("baloot_casual", { us:0, them:0, history:[] }));
 
   useEffect(() => {
     if (!loadLocal("baloot_migrated_v2", false)) {
@@ -382,13 +380,12 @@ export default function BalootApp() {
     }
   }, []);
   useEffect(() => { saveLocal("baloot_active_match", activeMatch); }, [activeMatch]);
-  useEffect(() => { saveLocal("baloot_casual",       casual);      }, [casual]);
   useEffect(() => { saveLocal("baloot_view",         view);        }, [view]);
 
   function startMatch() {
     const { A1, A2, B1, B2 } = names;
     if (!A1 || !A2 || !B1 || !B2) return;
-    setActiveMatch({ teamA:[A1,A2], teamB:[B1,B2], cumA:0, cumB:0, rounds:[], winner:null, mode:matchMode, turnIndex:0 });
+    setActiveMatch({ teamA:[A1,A2], teamB:[B1,B2], cumA:0, cumB:0, rounds:[], winner:null, mode:"ranked", turnIndex:0 });
     setView("play");
   }
 
@@ -423,24 +420,13 @@ export default function BalootApp() {
   function renderView() {
     if (loading) return <div style={{ textAlign:"center", padding:60, color:C.inkSoft, fontFamily:"Cairo,sans-serif" }}>جاري التحميل...</div>;
     if (view === "setup") {
-      if (matchMode === "casual") return (
-        <div>
-          <div className="card">
-            <div style={{ display:"flex", gap:8 }}>
-              <button className="pill pill-inactive" onClick={() => setMatchMode("ranked")}>رسمي</button>
-              <button className="pill pill-active"   onClick={() => setMatchMode("casual")}>ودي</button>
-            </div>
-          </div>
-          <CasualScreen casual={casual} setCasual={setCasual} />
-        </div>
-      );
       // احسب عدد المباريات لكل لاعب للترتيب
       const matchCount = {};
       matches.forEach((m) => [...(m.teamA||[]), ...(m.teamB||[])].forEach((n) => { if(n) matchCount[n] = (matchCount[n]||0) + 1; }));
       const dynamicPlayers = Array.from(new Set(matches.flatMap((m) => [...(m.teamA||[]), ...(m.teamB||[])]).map(n => n?.trim()).filter(Boolean)))
         .sort((a,b) => (matchCount[b]||0) - (matchCount[a]||0));
       const allPlayerNames = [...dynamicPlayers, ...STATIC_PLAYERS.filter(p => !dynamicPlayers.includes(p))];
-      return <HomeScreen names={names} setNames={setNames} matchMode={matchMode} setMatchMode={setMatchMode} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
+      return <HomeScreen names={names} setNames={setNames} onStart={startMatch} titles={titles} allPlayers={allPlayerNames} />;
     }
     if (view === "play") return activeMatch
       ? <PlayScreen match={activeMatch} setMatch={setActiveMatch} onFinish={finishMatch} onCancel={cancelMatch} onUndoFinish={removeLastSavedMatch} onNewMatch={() => { setActiveMatch(null); setView("setup"); }} />
@@ -496,7 +482,7 @@ function AutoInput({ value, onChange, suggestions }) {
 // =====================================================================
 // Home Screen
 // =====================================================================
-function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles, allPlayers }) {
+function HomeScreen({ names, setNames, onStart, titles, allPlayers }) {
   function update(field, val) { setNames({ ...names, [field]: val }); }
   const ready = names.A1 && names.A2 && names.B1 && names.B2;
   const titleEntries = Object.entries(titles).filter(([, v]) => v);
@@ -532,11 +518,6 @@ function HomeScreen({ names, setNames, matchMode, setMatchMode, onStart, titles,
 
       <div className="card">
         <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, marginBottom:12, color:C.ink }}>إعداد قيم</div>
-
-        <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-          <button className={`pill ${matchMode === "ranked" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("ranked")}>رسمي</button>
-          <button className={`pill ${matchMode === "casual" ? "pill-active" : "pill-inactive"}`} onClick={() => setMatchMode("casual")}>ودي</button>
-        </div>
 
         <div style={{ display:"flex", gap:10, marginBottom:18, position:"relative" }}>
           {/* فريق أ */}
@@ -679,7 +660,7 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
     <div>
       {/* Top bar */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span className="badge" style={{ background: mode === "ranked" ? C.gold : C.inkSoft }}>{mode === "ranked" ? "رسمي" : "ودي"}</span>
+        <span></span>
         <div style={{ display:"flex", gap:6 }}>
           <button className="pill pill-inactive" style={{ fontSize:12 }} onClick={() => setShowSwap(!showSwap)}>تبديل لاعب</button>
           <button className="pill pill-red"      style={{ fontSize:12 }} onClick={onCancel}>إلغاء</button>
@@ -789,76 +770,6 @@ function PlayScreen({ match, setMatch, onFinish, onCancel, onUndoFinish, onNewMa
 }
 
 // =====================================================================
-// Casual Screen
-// =====================================================================
-function CasualScreen({ casual, setCasual }) {
-  const { us, them, history } = casual;
-  const [inputUs,   setInputUs]   = useState("");
-  const [inputThem, setInputThem] = useState("");
-  const winner = us >= MATCH_TARGET && them >= MATCH_TARGET
-    ? (us !== them ? (us > them ? "نحن" : "هم") : null)
-    : us >= MATCH_TARGET ? "نحن" : them >= MATCH_TARGET ? "هم" : null;
-
-  function addEntry() {
-    const u = toInt(inputUs)||0, t = toInt(inputThem)||0;
-    if (u === 0 && t === 0) return;
-    const nU = us+u, nT = them+t;
-    setCasual({ us:nU, them:nT, history:[...history, {u,t,cumUs:nU,cumThem:nT}] });
-    setInputUs(""); setInputThem("");
-  }
-  function undoLast() {
-    if (!history.length) return;
-    const h = history.slice(0,-1), last = h[h.length-1];
-    setCasual({ us:last?last.cumUs:0, them:last?last.cumThem:0, history:h });
-  }
-  function newMatch() { setCasual({ us:0, them:0, history:[] }); }
-
-  return (
-    <div>
-      <div style={{ display:"flex", gap:10, marginBottom:14 }}>
-        {[["نحن", us, C.a], ["هم", them, C.b]].map(([label, val, bg]) => (
-          <div key={label} style={{ flex:1, background:bg, borderRadius:16, padding:"14px 12px", color:"#fff", textAlign:"center" }}>
-            <div style={{ fontSize:13, opacity:0.85, fontWeight:600, marginBottom:4 }}>{label}</div>
-            <div style={{ fontSize:42, fontWeight:900, fontFamily:"'Cairo',sans-serif", lineHeight:1 }}>{val}</div>
-            <div className="progress-track"><div className="progress-fill" style={{ width:`${Math.min(100,(val/MATCH_TARGET)*100)}%` }} /></div>
-          </div>
-        ))}
-      </div>
-
-      {winner ? (
-        <div className="card" style={{ textAlign:"center", background:C.a, border:"none" }}>
-          <div style={{ fontSize:20, fontWeight:800, color:"#fff", fontFamily:"'Cairo',sans-serif" }}>🏆 الناموووس {winner}!</div>
-          <div style={{ marginTop:12 }}><button className="pill" style={{ background:"#fff", color:C.a, fontWeight:800 }} onClick={newMatch}>قيم ثاني؟</button></div>
-        </div>
-      ) : (
-        <div className="card">
-          <div style={{ display:"flex", gap:10, marginBottom:12 }}>
-            <div style={{ flex:1 }}><label>نحن</label><input type="text" inputMode="numeric" value={inputUs}   onChange={(e) => setInputUs(e.target.value)} /></div>
-            <div style={{ flex:1 }}><label>هم</label> <input type="text" inputMode="numeric" value={inputThem} onChange={(e) => setInputThem(e.target.value)} /></div>
-          </div>
-          <button onClick={addEntry} style={{ width:"100%", background:C.cta, border:"none", borderRadius:12, padding:"13px 0", fontWeight:800, color:"#fff", fontFamily:"'Cairo',sans-serif", marginBottom:10 }}>تم</button>
-          <div style={{ display:"flex", gap:8 }}>
-            <button onClick={undoLast} disabled={!history.length} className="pill pill-red"      style={{ flex:1, opacity:history.length?1:0.4 }}>تراجع</button>
-            <button onClick={newMatch}                             className="pill pill-inactive" style={{ flex:1 }}>قيم جديد</button>
-          </div>
-        </div>
-      )}
-
-      {history.length > 0 && (
-        <div className="card">
-          <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:14, marginBottom:10 }}>السجل</div>
-          {history.slice().reverse().map((h, i) => (
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, borderBottom:`1px solid ${C.line}`, padding:"6px 0" }}>
-              <span style={{ color:C.inkSoft }}>نحن +{h.u} · هم +{h.t}</span>
-              <span style={{ fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>{h.cumUs} – {h.cumThem}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // =====================================================================
 // Stats Screen
 // =====================================================================
@@ -958,7 +869,6 @@ function LogScreen({ matches, onDelete }) {
               <div style={{ fontSize:13, marginTop:4, display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
                 <span style={{ color:C.inkSoft }}>{m.finalA} – {m.finalB}</span>
                 <span style={{ color:C.a, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>فاز {(m.winningTeam==="A"?m.teamA:m.teamB).join(" / ")}</span>
-                <span className="badge" style={{ background:m.mode==="ranked"?C.gold:C.inkSoft }}>{m.mode==="ranked"?"رسمي":"ودي"}</span>
               </div>
             </div>
             <button onClick={() => { setPwTarget(m.id); setPwInput(""); setPwError(""); }}
@@ -1005,7 +915,7 @@ function ArchiveScreen({ matches, currentMonthKey }) {
             {monthLabel(selected)} {selected===currentMonthKey && <span style={{ fontSize:12, color:C.inkSoft, fontWeight:400 }}>(الحالي)</span>}
           </div>
           <div style={{ fontSize:13, color:C.inkSoft, marginBottom:titleEntries.length?12:0 }}>
-            رسمي: {monthMatches.filter((m) => m.mode==="ranked").length} · ودي: {monthMatches.filter((m) => m.mode==="casual").length}
+            عدد القيمات: {monthMatches.length}
           </div>
           {titleEntries.length>0 && (
             <div className="chips-row" style={{ marginTop:8 }}>
