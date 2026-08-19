@@ -517,8 +517,6 @@ function HomeScreen({ names, setNames, onStart, titles, allPlayers }) {
       )}
 
       <div className="card">
-        <div style={{ fontFamily:"'Cairo',sans-serif", fontWeight:800, fontSize:15, marginBottom:12, color:C.ink }}>إعداد قيم</div>
-
         <div style={{ display:"flex", gap:10, marginBottom:18, position:"relative" }}>
           {/* فريق أ */}
           <div style={{ flex:1, background:C.surface, border:`1px solid ${C.line}`, borderTop:`3px solid ${C.a}`, borderRadius:14, padding:"12px 10px" }}>
