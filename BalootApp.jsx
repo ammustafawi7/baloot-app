@@ -810,21 +810,30 @@ function StatsScreen({ stats }) {
                       </div>
                     ))
                 }
-                <div style={{ fontWeight:700, margin:"10px 0 6px", fontFamily:"'Cairo',sans-serif", color:C.ink }}>المشاريع</div>
-                {!Object.keys(s.projects).length
-                  ? <div style={{ color:C.inkSoft }}>لا يوجد</div>
-                  : Object.entries(s.projects).map(([key,count]) => {
-                      const proj = PROJECTS.find((p) => p.key===key);
-                      return <div key={key} style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}><span>{proj?proj.label:key}</span><span style={{ fontFamily:"'Cairo',sans-serif", fontWeight:600 }}>{count} مرة</span></div>;
-                    })
-                }
-                <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:4 }}>
-                  {[["قيد",s.qaid],["شراي صن",s.sunBuys],["شراي حكم",s.hokomBuys]].map(([lbl,val]) => (
-                    <div key={lbl} style={{ display:"flex", justifyContent:"space-between" }}>
-                      <span>{lbl}</span><span style={{ fontFamily:"'Cairo',sans-serif", fontWeight:700 }}>{val}</span>
-                    </div>
-                  ))}
+                <div style={{ marginTop:10, display:"flex", justifyContent:"space-between" }}>
+                  <span>قيد</span><span style={{ fontFamily:"'Cairo',sans-serif", fontWeight:700 }}>{s.qaid}</span>
                 </div>
+                {(() => {
+                  const eligible = Object.entries(s.partners).filter(([,pr]) => (pr.wins+pr.losses) >= 3);
+                  if (!eligible.length) return <div style={{ color:C.inkSoft, marginTop:8, fontSize:12 }}>ما في شريك بـ 3 قيمات أو أكثر</div>;
+                  const sorted = eligible.slice().sort((a,b) => (b[1].wins/(b[1].wins+b[1].losses)) - (a[1].wins/(a[1].wins+a[1].losses)));
+                  const [bestName, bestPr] = sorted[0];
+                  const [worstName, worstPr] = sorted[sorted.length-1];
+                  return (
+                    <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:6 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between" }}>
+                        <span style={{ color:C.a }}>أفضل شريك</span>
+                        <span style={{ fontFamily:"'Cairo',sans-serif", fontWeight:700 }}>{bestName} <span style={{ color:C.inkSoft, fontWeight:400, fontSize:12 }}>({Math.round(bestPr.wins/(bestPr.wins+bestPr.losses)*100)}%)</span></span>
+                      </div>
+                      {sorted.length > 1 && (
+                        <div style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ color:C.b }}>أسوء شريك</span>
+                          <span style={{ fontFamily:"'Cairo',sans-serif", fontWeight:700 }}>{worstName} <span style={{ color:C.inkSoft, fontWeight:400, fontSize:12 }}>({Math.round(worstPr.wins/(worstPr.wins+worstPr.losses)*100)}%)</span></span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
